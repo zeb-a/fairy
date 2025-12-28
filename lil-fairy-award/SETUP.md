@@ -205,6 +205,13 @@ const supabaseAnonKey = 'your-anon-key';
 - Run the SQL commands above to set up proper policies
 - Make sure the storage bucket and policies are correctly configured
 
+### Authentication Timeout Errors
+- Make sure Auth is enabled in your Supabase project
+- Verify that email authentication providers are enabled
+- Check that your Supabase URL and API key match your project
+- Ensure your domain is allowed in the Auth security settings
+- If using email confirmation, make sure email templates are properly configured
+
 ## Additional Configuration
 
 1. Ensure Auth is enabled in your Supabase project

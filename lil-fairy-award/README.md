@@ -67,12 +67,28 @@ The application uses the following Supabase tables:
 
 ## Troubleshooting
 
+If you encounter any issues:
+
+1. **Database Setup**: Make sure you've created the required tables and RLS policies as mentioned in the SETUP.md file.
+2. **API Endpoints**: If you're getting 404 errors, verify that your API endpoints are properly set up.
+3. **CORS Issues**: If you're having trouble with API calls, make sure CORS is properly configured in your Supabase settings.
+4. **Authentication Issues**: 
+   - If you're getting authentication timeout errors, make sure your Supabase project is properly configured with Auth enabled
+   - Check that your Supabase URL and API key are correct in `src/services/supabaseService.js`
+   - Make sure email authentication is enabled in your Supabase Auth settings
+   - Verify that your email templates and redirects are properly configured
+5. **Missing Tables**: If you're getting 404 errors for teachers, classes, students, tasks, or points_log, ensure you've run all the SQL commands from SETUP.md to create these tables and their RLS policies.
+
 If you're seeing 404 or 400 errors when accessing the dashboard:
 
 - Make sure you've run the database setup SQL commands (see [SETUP.md](./SETUP.md))
 - Verify that your Supabase tables exist with the correct names
 - Ensure Row Level Security policies are properly configured
 - Check that your Supabase project allows your domain for CORS
+
+For authentication diagnostics, you can run the diagnostic utility:
+- In your browser console, call `runAuthDiagnostics()` to check your Supabase authentication configuration
+- This will help identify if there are issues with your Supabase project setup
 
 For avatar upload errors, ensure the storage bucket and policies are properly set up.
 
