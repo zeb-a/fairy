@@ -50,6 +50,102 @@ export const ClassProvider = ({ children }) => {
     initializeData();
   }, []);
 
+  // Set up Realtime subscriptions
+  useEffect(() => {
+    let pointsChannel;
+    let studentsChannel;
+    let classesChannel;
+
+    const setupRealtimeSubscriptions = async () => {
+      const currentUser = supabaseService.auth.getCurrentUser();
+      
+      // Subscribe to points changes
+      pointsChannel = supabaseService.realtime.subscribeToPoints((payload) => {
+        // When a point is added, we need to refresh the student data to get updated points
+        if (selectedClass) {
+          const fetchUpdatedStudents = async () => {
+            const { data: freshStudents, error: fetchError } = await supabaseService.db.getStudents(selectedClass.id);
+            if (!fetchError) {
+              setStudents(freshStudents);
+            }
+          };
+          fetchUpdatedStudents();
+        }
+      });
+
+      // Subscribe to students changes
+      studentsChannel = supabaseService
+        .channel('students-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'students',
+          },
+          (payload) => {
+            // Refresh students for the currently selected class
+            if (selectedClass && payload.new.class_id === selectedClass.id) {
+              const fetchUpdatedStudents = async () => {
+                const { data: freshStudents, error: fetchError } = await supabaseService.db.getStudents(selectedClass.id);
+                if (!fetchError) {
+                  setStudents(freshStudents);
+                }
+              };
+              fetchUpdatedStudents();
+            }
+          }
+        )
+        .subscribe();
+
+      // Subscribe to classes changes for the current user
+      classesChannel = supabaseService
+        .channel('classes-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'classes',
+            filter: `teacher_id=eq.${currentUser.id}`,
+          },
+          (payload) => {
+            const fetchUpdatedClasses = async () => {
+              const { data: freshClasses, error: fetchError } = await supabaseService.db.getClasses(currentUser.id);
+              if (!fetchError) {
+                setClasses(freshClasses);
+                
+                // If the selected class was updated, update it in state
+                if (selectedClass) {
+                  const updatedClass = freshClasses.find(cls => cls.id === selectedClass.id);
+                  if (updatedClass) {
+                    setSelectedClass(updatedClass);
+                  }
+                }
+              }
+            };
+            fetchUpdatedClasses();
+          }
+        )
+        .subscribe();
+    };
+
+    setupRealtimeSubscriptions();
+
+    // Cleanup function to unsubscribe when component unmounts
+    return () => {
+      if (pointsChannel) {
+        supabaseService.realtime.unsubscribe(pointsChannel);
+      }
+      if (studentsChannel) {
+        supabase.removeChannel(studentsChannel);
+      }
+      if (classesChannel) {
+        supabase.removeChannel(classesChannel);
+      }
+    };
+  }, [selectedClass]);
+
   const value = {
     selectedClass,
     setSelectedClass,
@@ -62,6 +158,7 @@ export const ClassProvider = ({ children }) => {
     addStudent: async (studentData) => {
       const { data: newStudent, error } = await supabaseService.db.createStudent(studentData);
       if (!error && newStudent) {
+        // Optimistic update: add the student to the local state immediately
         setStudents([...students, newStudent]);
         return newStudent;
       }
@@ -81,11 +178,7 @@ export const ClassProvider = ({ children }) => {
       );
       
       if (!error && newPoint) {
-        // Refresh the students list to get updated points from the database
-        const { data: freshStudents, error: fetchError } = await supabaseService.db.getStudents(student.class_id);
-        if (!fetchError) {
-          setStudents(freshStudents);
-        }
+        // The realtime subscription will handle updating the student data
       }
     },
     addClass: async (classData) => {
@@ -96,10 +189,48 @@ export const ClassProvider = ({ children }) => {
         currentUser.id
       );
       if (!error && newClass) {
+        // Optimistic update: add the class to the local state immediately
         setClasses([...classes, newClass]);
         return newClass;
       }
       return null;
+    },
+    deleteClass: async (classId) => {
+      const { error } = await supabaseService.db.deleteClass(classId);
+      if (!error) {
+        // Optimistic update: remove the class from local state immediately
+        setClasses(classes.filter(cls => cls.id !== classId));
+        // If the deleted class was the selected class, clear selection
+        if (selectedClass?.id === classId) {
+          setSelectedClass(null);
+        }
+        return true;
+      }
+      return false;
+    },
+    updateClass: async (classId, updates) => {
+      const { data: updatedClass, error } = await supabaseService.db.updateClass(classId, updates);
+      if (!error && updatedClass) {
+        // Optimistic update: update the class in local state immediately
+        setClasses(classes.map(cls => 
+          cls.id === classId ? updatedClass : cls
+        ));
+        // If the updated class was the selected class, update selection
+        if (selectedClass?.id === classId) {
+          setSelectedClass(updatedClass);
+        }
+        return updatedClass;
+      }
+      return null;
+    },
+    deleteStudent: async (studentId) => {
+      const { error } = await supabaseService.db.deleteStudent(studentId);
+      if (!error) {
+        // Optimistic update: remove the student from local state immediately
+        setStudents(students.filter(student => student.id !== studentId));
+        return true;
+      }
+      return false;
     }
   };
 
