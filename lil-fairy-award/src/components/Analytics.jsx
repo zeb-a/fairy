@@ -2,29 +2,60 @@ import React, { useState, useEffect } from 'react';
 import { useClassContext } from '../contexts/ClassContext';
 import DonutChart from './DonutChart';
 import StudentReportCard from './StudentReportCard';
-import { generateMockPointLogs, calculateStrengthVsNeed, getTopStrengths, generateInsights, filterLogsByDateRange } from '../utils/insightsEngine';
+import { transformPointsLogData, calculateStrengthVsNeed, getTopStrengths, getClassTopStrengths, generateInsights, filterLogsByDateRange } from '../utils/insightsEngine';
+import supabaseService from '../services/supabaseService';
 
 const Analytics = () => {
-  const { students, loading } = useClassContext();
+  const { students, loading, selectedClass } = useClassContext();
   const [selectedStudent, setSelectedStudent] = useState('all');
   const [dateRange, setDateRange] = useState('all'); // 'week', 'month', 'all'
   const [pointLogs, setPointLogs] = useState([]);
   const [activeView, setActiveView] = useState('overview'); // 'overview', 'student-report'
+  const [tasks, setTasks] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(true);
 
-  // Generate mock point logs when students change
+  // Fetch real point logs and tasks when selected class changes
   useEffect(() => {
-    if (students && students.length > 0) {
-      const logs = generateMockPointLogs(students);
-      setPointLogs(logs);
-    }
-  }, [students]);
+    const fetchAnalyticsData = async () => {
+      if (selectedClass) {
+        setLogsLoading(true);
+        
+        // Fetch point logs for the class
+        const { data: pointsLogData, error: pointsError } = await supabaseService.db.getPointLog(selectedClass.id);
+        
+        if (pointsError) {
+          console.error('Error fetching point logs:', pointsError);
+          setPointLogs([]);
+          setLogsLoading(false);
+          return;
+        }
+        
+        // Fetch tasks for the class to get task names
+        const { data: tasksData, error: tasksError } = await supabaseService.db.getTasks(selectedClass.id);
+        
+        if (tasksError) {
+          console.error('Error fetching tasks:', tasksError);
+          setTasks([]);
+        } else {
+          setTasks(tasksData || []);
+        }
+        
+        // Transform the data to the format expected by analytics
+        const transformedData = transformPointsLogData(pointsLogData || [], students, tasksData || []);
+        setPointLogs(transformedData);
+        setLogsLoading(false);
+      }
+    };
+
+    fetchAnalyticsData();
+  }, [selectedClass, students]);
 
   // Filter logs based on date range
   const filteredLogs = filterLogsByDateRange(pointLogs, dateRange);
 
   // Calculate overall class metrics
   const { strengthPercent, needPercent } = calculateStrengthVsNeed(filteredLogs);
-  const topStrengths = getTopStrengths(filteredLogs);
+  const topStrengths = getClassTopStrengths(filteredLogs);
   const insights = generateInsights(filteredLogs, students);
 
   // Get selected student object if a specific student is selected
@@ -38,7 +69,7 @@ const Analytics = () => {
     { name: 'Needs', value: needPercent, color: '#FF6B6B' }
   ];
 
-  if (loading) {
+  if (loading || logsLoading) {
     return <div className="analytics glass">Loading analytics...</div>;
   }
 

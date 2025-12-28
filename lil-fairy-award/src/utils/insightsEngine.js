@@ -1,34 +1,22 @@
-// Mock data generation for insights
-export const generateMockPointLogs = (students) => {
-  const pointLogs = [];
+// Function to transform points_log data to the format expected by the analytics
+export const transformPointsLogData = (pointsLog, students, tasks) => {
+  if (!pointsLog || !Array.isArray(pointsLog)) return [];
   
-  // Generate mock point logs based on students
-  for (let i = 0; i < 50; i++) {
-    const randomStudent = students[Math.floor(Math.random() * students.length)];
-    const types = ['positive', 'reminder'];
-    const tasks = [
-      'Participation', 'Kindness', 'Focus', 'Helping Others', 'Creativity', 'Leadership',
-      'Needs Focus', 'Be Respectful', 'Complete Work', 'Stay Organized', 'Follow Rules', 'Self-Advocacy'
-    ];
+  return pointsLog.map(log => {
+    // Find the student associated with this log entry
+    const student = students.find(s => s.id === log.student_id);
+    // Find the task associated with this log entry
+    const task = tasks.find(t => t.id === log.task_id);
     
-    const randomType = types[Math.floor(Math.random() * types.length)];
-    const randomTask = tasks[Math.floor(Math.random() * tasks.length)];
-    
-    // Generate timestamps for the last 30 days
-    const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 30));
-    
-    pointLogs.push({
-      id: i + 1,
-      studentId: randomStudent.id,
-      studentName: randomStudent.name,
-      type: randomType,
-      taskName: randomTask,
-      timestamp: date.toISOString()
-    });
-  }
-  
-  return pointLogs;
+    return {
+      id: log.id,
+      studentId: log.student_id,
+      studentName: student ? student.name : 'Unknown Student',
+      type: log.point_type === 'strength' ? 'positive' : 'reminder',
+      taskName: task ? task.title : 'Unknown Task',
+      timestamp: log.created_at || log.timestamp
+    };
+  });
 };
 
 // Function to calculate strength vs need distribution
@@ -50,6 +38,24 @@ export const calculateStrengthVsNeed = (pointLogs, studentId = null) => {
     strengthPercent: Math.round((strengthCount / totalCount) * 100),
     needPercent: Math.round((needCount / totalCount) * 100)
   };
+};
+
+// Function to get top 3 strengths for the class (for the main Donut Chart)
+export const getClassTopStrengths = (pointLogs) => {
+  // Filter to only positive logs (strengths)
+  const strengthLogs = pointLogs.filter(log => log.type === 'positive');
+  
+  // Count occurrences of each task
+  const strengthCounts = {};
+  strengthLogs.forEach(log => {
+    strengthCounts[log.taskName] = (strengthCounts[log.taskName] || 0) + 1;
+  });
+  
+  // Sort by count and return top 3
+  return Object.entries(strengthCounts)
+    .map(([taskName, count]) => ({ taskName, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
 };
 
 // Function to get top strengths for a student or class
@@ -90,15 +96,48 @@ export const generateInsights = (pointLogs, students, studentId = null) => {
     }
   }
   
-  // Growth Alert: Check if reminders have increased in the last 7 days
+  // Calculate weekly comparison for growth tracking
+  const now = new Date();
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
   
   const recentLogs = filteredLogs.filter(log => new Date(log.timestamp) > weekAgo);
-  const recentReminders = recentLogs.filter(log => log.type === 'reminder').length;
   const previousLogs = filteredLogs.filter(log => new Date(log.timestamp) <= weekAgo);
+  
+  // Calculate strength vs reminder ratios for both periods
+  const recentStrengths = recentLogs.filter(log => log.type === 'positive').length;
+  const recentReminders = recentLogs.filter(log => log.type === 'reminder').length;
+  const previousStrengths = previousLogs.filter(log => log.type === 'positive').length;
   const previousReminders = previousLogs.filter(log => log.type === 'reminder').length;
   
+  const recentTotal = recentStrengths + recentReminders;
+  const previousTotal = previousStrengths + previousReminders;
+  
+  // Fairy Insight: Compare focus levels
+  if (recentTotal > 0 && previousTotal > 0) {
+    const recentFocusRatio = recentStrengths / recentTotal;
+    const previousFocusRatio = previousStrengths / previousTotal;
+    
+    if (recentFocusRatio > previousFocusRatio) {
+      const improvementPercent = Math.round(((recentFocusRatio - previousFocusRatio) / previousFocusRatio) * 100);
+      if (studentId) {
+        const student = students.find(s => s.id === studentId);
+        insights.push(`Fairy Insight: ${student?.name || 'This student'} is ${improvementPercent}% more focused this week than last week!`);
+      } else {
+        insights.push(`Fairy Insight: The class is ${improvementPercent}% more focused this week than last week!`);
+      }
+    } else if (recentFocusRatio < previousFocusRatio) {
+      const declinePercent = Math.round(((previousFocusRatio - recentFocusRatio) / previousFocusRatio) * 100);
+      if (studentId) {
+        const student = students.find(s => s.id === studentId);
+        insights.push(`Fairy Insight: ${student?.name || 'This student'} is ${declinePercent}% less focused this week than last week. Consider extra support.`);
+      } else {
+        insights.push(`Fairy Insight: The class is ${declinePercent}% less focused this week than last week. Consider adjusting activities.`);
+      }
+    }
+  }
+  
+  // Growth Alert: Check if reminders have increased in the last 7 days
   if (recentReminders > previousReminders && recentReminders > 0) {
     const increasePercent = previousReminders === 0 
       ? 100 
@@ -133,6 +172,29 @@ export const generateInsights = (pointLogs, students, studentId = null) => {
     
     if (studentsWithoutRecentReminders.length > 0) {
       insights.push(`Magic Moment: ${studentsWithoutRecentReminders[0].name} hasn't received a reminder in over a week!`);
+    }
+  }
+  
+  // Consistency Insight: Identify most consistent performers
+  if (!studentId) {
+    const studentStrengthCounts = {};
+    pointLogs.forEach(log => {
+      if (log.type === 'positive') {
+        studentStrengthCounts[log.studentId] = (studentStrengthCounts[log.studentId] || 0) + 1;
+      }
+    });
+    
+    // Find top 3 students with most positive awards
+    const sortedStudents = Object.entries(studentStrengthCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([studentId, count]) => ({ studentId, count }));
+    
+    if (sortedStudents.length > 0) {
+      const topStudent = students.find(s => s.id === sortedStudents[0].studentId);
+      if (topStudent) {
+        insights.push(`Consistency Star: ${topStudent.name} leads with ${sortedStudents[0].count} positive awards!`);
+      }
     }
   }
   
