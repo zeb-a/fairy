@@ -20,9 +20,29 @@ export const resolveAvatarUrl = (avatarUrl, avatarType) => {
     return avatarUrl;
   }
   
+  // For file paths, return a placeholder until we can get the public URL
+  // The actual URL resolution will be handled in components using useEffect
+  return '👤'; // Return default for now, actual URL should be resolved in component
+};
+
+// Async version for programmatic use
+export const resolveAvatarUrlAsync = async (avatarUrl, avatarType) => {
+  if (!avatarUrl) {
+    return '👤'; // Default avatar if none provided
+  }
+  
+  if (avatarType === 'emoji' || isEmojiAvatar(avatarUrl)) {
+    return avatarUrl; // Return the emoji directly
+  }
+  
+  // Check if it's already a public URL (contains http/https)
+  if (avatarUrl.startsWith('http')) {
+    return avatarUrl;
+  }
+  
   // It's a file path, need to get public URL
   try {
-    return supabaseService.storage.getPublicUrl(avatarUrl);
+    return await supabaseService.storage.getPublicUrl(avatarUrl);
   } catch (error) {
     console.error('Error resolving avatar URL:', error);
     return '👤'; // Return default avatar on error

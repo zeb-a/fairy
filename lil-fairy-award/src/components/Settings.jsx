@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 import supabaseService from '../services/supabaseService';
-import { resolveAvatarUrl } from '../utils/avatarUtils';
+import { resolveAvatarUrl, resolveAvatarUrlAsync } from '../utils/avatarUtils';
 
 const Settings = () => {
   const { user, updateUser, updateAvatar, updatePassword } = useUser();

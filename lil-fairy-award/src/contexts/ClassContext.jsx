@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useUser } from './UserContext';
 import supabaseService from '../services/supabaseService';
 
 const ClassContext = createContext();
@@ -22,9 +23,11 @@ export const ClassProvider = ({ children }) => {
     const initializeData = async () => {
       setLoading(true);
       
+      // Get the current user
+      const currentUser = supabaseService.auth.getCurrentUser();
+      
       // Get classes for the teacher
-      const mockUserId = 'user1'; // In a real app, this would come from auth
-      const { data: classesData, error: classesError } = await supabaseService.db.getClasses(mockUserId);
+      const { data: classesData, error: classesError } = await supabaseService.db.getClasses(currentUser.id);
       
       if (!classesError && classesData) {
         setClasses(classesData);
@@ -86,10 +89,11 @@ export const ClassProvider = ({ children }) => {
       }
     },
     addClass: async (classData) => {
+      const currentUser = supabaseService.auth.getCurrentUser();
       const { data: newClass, error } = await supabaseService.db.createClass(
         classData.name, 
         classData.description, 
-        'user1' // current user ID
+        currentUser.id
       );
       if (!error && newClass) {
         setClasses([...classes, newClass]);
