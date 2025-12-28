@@ -28,6 +28,33 @@ body {
   min-height: 100vh;
 }
 
+/* Loading state for auth check */
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #6B46FF 0%, #7DD7FF 100%);
+}
+
+.loading-spinner {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .main-content {
   flex: 1;
   padding: 2rem;
