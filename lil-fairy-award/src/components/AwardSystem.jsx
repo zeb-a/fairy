@@ -4,6 +4,8 @@ import { useClassContext } from '../contexts/ClassContext';
 const AwardSystem = () => {
   const { students, updateStudentPoints, loading } = useClassContext();
   const [activities, setActivities] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showAwardPanel, setShowAwardPanel] = useState(false);
 
   // Initialize with some activities
   useEffect(() => {
@@ -27,9 +29,11 @@ const AwardSystem = () => {
     setActivities(prev => [newActivity, ...prev.slice(0, 9)]); // Keep only the last 10 activities
   };
 
-  const handleAddAward = (student, type) => {
+  const handleAddAward = (student, type, awardName) => {
     updateStudentPoints(student.id, type, 1);
-    addActivity(student.name, type);
+    addActivity(`${student.name} earned '${awardName}'!`, type);
+    setShowAwardPanel(false);
+    setSelectedStudent(null);
   };
 
   if (loading) {
@@ -38,60 +42,90 @@ const AwardSystem = () => {
 
   return (
     <div className="award-system">
-      <h1>Award System</h1>
+      <h1>Interactive Classroom Dashboard</h1>
       
-      <div className="award-controls">
-        <div className="award-type-selector">
-          <h2>Award Type</h2>
-          <div className="award-type-buttons">
-            <button className="award-type-btn strength">
-              <span className="award-icon">⭐</span>
-              <span>Strength</span>
-            </button>
-            <button className="award-type-btn need">
-              <span className="award-icon">🔴</span>
-              <span>Need</span>
-            </button>
-          </div>
-        </div>
-        
-        <div className="live-activity">
-          <h2>Live Activity Feed</h2>
-          <div className="activity-list">
-            {activities.map(activity => (
-              <div key={activity.id} className={`activity-item ${activity.type}`}>
-                <span className="activity-student">{activity.studentName}</span>
-                <span className="activity-action">{activity.action}</span>
-                <span className="activity-time">{activity.time}</span>
+      <div className="student-grid">
+        {students.map(student => (
+          <div 
+            key={student.id} 
+            className="student-card glass"
+            onClick={() => {
+              setSelectedStudent(student);
+              setShowAwardPanel(true);
+            }}
+          >
+            <div className="student-avatar">{student.avatar_url}</div>
+            <h3>{student.name}</h3>
+            <div className="student-stats">
+              <div className="stat">
+                <span className="stat-label">Strengths:</span>
+                <span className="stat-value purple">{student.strength_points}</span>
               </div>
-            ))}
+              <div className="stat">
+                <span className="stat-label">Needs:</span>
+                <span className="stat-value red">{student.need_points}</span>
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
       </div>
+
+      {/* Award Magic Panel */}
+      {showAwardPanel && selectedStudent && (
+        <div className="modal-overlay" onClick={() => setShowAwardPanel(false)}>
+          <div className="modal-content glass" onClick={(e) => e.stopPropagation()}>
+            <h2>Award Magic for {selectedStudent.name}</h2>
+            <p>Choose a magical award to give:</p>
+            
+            <div className="award-magic-section">
+              <div className="award-category">
+                <h3>Positive Magic</h3>
+                <div className="award-buttons">
+                  {['Participation', 'Kindness', 'Focus', 'Helping Others', 'Creativity', 'Leadership'].map((award) => (
+                    <button 
+                      key={award}
+                      className="award-btn strength"
+                      onClick={() => handleAddAward(selectedStudent, 'strength', award)}
+                    >
+                      <span className="award-icon">⭐</span>
+                      <span>{award}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="award-category">
+                <h3>Magic Reminders</h3>
+                <div className="award-buttons">
+                  {['Needs Focus', 'Be Respectful', 'Complete Work', 'Stay Organized', 'Follow Rules', 'Self-Advocacy'].map((award) => (
+                    <button 
+                      key={award}
+                      className="award-btn need"
+                      onClick={() => handleAddAward(selectedStudent, 'need', award)}
+                    >
+                      <span className="award-icon">🔴</span>
+                      <span>{award}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <button className="close-modal" onClick={() => setShowAwardPanel(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       
-      <div className="student-award-section">
-        <h2>Award to Students</h2>
-        <div className="student-list">
-          {students.map(student => (
-            <div key={student.id} className="student-award-card">
-              <div className="student-info">
-                <span className="student-avatar">{student.avatar_url}</span>
-                <span className="student-name">{student.name}</span>
-              </div>
-              <div className="award-buttons">
-                <button 
-                  className="award-strength-btn"
-                  onClick={() => handleAddAward(student, 'strength')}
-                >
-                  ⭐ Strength
-                </button>
-                <button 
-                  className="award-need-btn"
-                  onClick={() => handleAddAward(student, 'need')}
-                >
-                  🔴 Need
-                </button>
-              </div>
+      <div className="live-activity-feed">
+        <h2>Live Snapshot Feed</h2>
+        <div className="activity-list">
+          {activities.map(activity => (
+            <div key={activity.id} className={`activity-item ${activity.type}`}>
+              <span className="activity-student">{activity.studentName}</span>
+              <span className="activity-action">{activity.action}</span>
+              <span className="activity-time">{activity.time}</span>
             </div>
           ))}
         </div>
