@@ -5,7 +5,7 @@ node_modules/
 # Build artifacts
 build/
 dist/
-*.js
+*.js.map
 
 # Environment
 .env
@@ -30,7 +30,7 @@ __pycache__/
 *.swp
 *.swo
 
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
 
@@ -39,7 +39,30 @@ coverage/
 htmlcov/
 .coverage
 
-# Testing
+# Cache
 .mypy_cache/
 .pytest_cache/
+.nyc_output/
+coverage/lcov-report/
+
+# Distribution
+*.tar.gz
+*.zip
+*.tgz
+*.tar
+*.gz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
 ```
