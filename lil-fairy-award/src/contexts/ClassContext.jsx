@@ -74,7 +74,7 @@ export const ClassProvider = ({ children }) => {
       });
 
       // Subscribe to students changes
-      studentsChannel = supabaseService
+      studentsChannel = supabaseService.client
         .channel('students-changes')
         .on(
           'postgres_changes',
@@ -99,7 +99,7 @@ export const ClassProvider = ({ children }) => {
         .subscribe();
 
       // Subscribe to classes changes for the current user
-      classesChannel = supabaseService
+      classesChannel = supabaseService.client
         .channel('classes-changes')
         .on(
           'postgres_changes',
@@ -138,10 +138,10 @@ export const ClassProvider = ({ children }) => {
         supabaseService.realtime.unsubscribe(pointsChannel);
       }
       if (studentsChannel) {
-        supabase.removeChannel(studentsChannel);
+        supabaseService.client.removeChannel(studentsChannel);
       }
       if (classesChannel) {
-        supabase.removeChannel(classesChannel);
+        supabaseService.client.removeChannel(classesChannel);
       }
     };
   }, [selectedClass]);

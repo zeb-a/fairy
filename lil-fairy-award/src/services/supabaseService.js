@@ -33,6 +33,8 @@ const handleOperation = async (operation, retries = 3) => {
 };
 
 const supabaseService = {
+  // Direct access to the supabase client
+  client: supabase,
   // Auth functions
   auth: {
     signIn: async (email, password) => {
