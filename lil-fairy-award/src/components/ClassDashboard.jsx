@@ -4,12 +4,13 @@ import supabaseService from '../services/supabaseService';
 import { resolveAvatarUrl } from '../utils/avatarUtils';
 
 const ClassDashboard = () => {
-  const { classes, selectedClass, setSelectedClass, students, addStudent, updateStudentPoints, loading } = useClassContext();
+  const { classes, selectedClass, setSelectedClass, students, addStudent, updateStudentPoints, deleteStudent, loading } = useClassContext();
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentAvatar, setNewStudentAvatar] = useState('👤');
   const [showGiveMagicModal, setShowGiveMagicModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [deletingStudentId, setDeletingStudentId] = useState(null);
 
   // Load tasks for the selected class
   useEffect(() => {
@@ -39,6 +40,15 @@ const ClassDashboard = () => {
       });
       setNewStudentName('');
     }
+  };
+
+  const handleDeleteStudent = async (studentId) => {
+    setDeletingStudentId(studentId);
+    const success = await deleteStudent(studentId);
+    if (success) {
+      // The context already handles updating the state
+    }
+    setDeletingStudentId(null);
   };
 
   const handleGiveMagic = (student) => {
@@ -123,7 +133,6 @@ const ClassDashboard = () => {
               <div 
                 key={student.id} 
                 className="student-card glass"
-                onClick={() => handleGiveMagic(student)}
               >
                 <div className="student-avatar">{resolveAvatarUrl(student.avatar_url)}</div>
                 <h3>{student.name}</h3>
@@ -136,6 +145,21 @@ const ClassDashboard = () => {
                     <span className="stat-label">Needs:</span>
                     <span className="stat-value red">{student.need_points}</span>
                   </div>
+                </div>
+                <div className="student-actions">
+                  <button 
+                    className="give-magic-btn"
+                    onClick={() => handleGiveMagic(student)}
+                  >
+                    Give Magic
+                  </button>
+                  <button 
+                    className="delete-student-btn"
+                    onClick={() => handleDeleteStudent(student.id)}
+                    disabled={deletingStudentId === student.id}
+                  >
+                    {deletingStudentId === student.id ? 'Deleting...' : 'Delete'}
+                  </button>
                 </div>
               </div>
             ))}

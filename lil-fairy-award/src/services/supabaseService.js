@@ -208,6 +208,21 @@ const supabaseService = {
       return result;
     },
     
+    updateClass: async (classId, updates) => {
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('classes')
+          .update(updates)
+          .eq('id', classId)
+          .select()
+          .single();
+        
+        return { data, error };
+      });
+      
+      return result;
+    },
+
     deleteClass: async (classId) => {
       const result = await handleOperation(async () => {
         // Delete all students in the class first (cascade delete)

@@ -6,6 +6,7 @@ import { ActivityProvider } from './components/LiveSnapshot';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import ClassDashboard from './components/ClassDashboard';
+import Classes from './components/Classes';
 import AwardSystem from './components/AwardSystem';
 import GameCenter from './components/GameCenter';
 import Analytics from './components/Analytics';
@@ -35,6 +36,7 @@ const AppRouter = () => {
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/classes" element={<Classes />} />
               <Route path="/dashboard/classes" element={<ClassDashboard />} />
               <Route path="/dashboard/games" element={<GameCenter />} />
               <Route path="/dashboard/reports" element={<Analytics />} />

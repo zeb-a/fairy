@@ -2324,3 +2324,292 @@ button:disabled {
   }
 }
 
+
+/* Classes Management Styles */
+.classes-management {
+  padding: 2rem;
+  color: white;
+}
+
+.classes-actions {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.btn-primary {
+  padding: 0.8rem 1.5rem;
+  background: #6B46FF;
+  color: white;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.28s ease;
+}
+
+.btn-primary:hover {
+  background: #5a3ad9;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.28s ease;
+  margin: 0 0.25rem;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-danger {
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 107, 107, 0.3);
+  color: white;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.28s ease;
+  margin: 0 0.25rem;
+}
+
+.btn-danger:hover {
+  background: rgba(255, 107, 107, 0.4);
+}
+
+.classes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.class-card {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+  transition: all 0.28s ease;
+}
+
+.class-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(31, 38, 135, 0.3);
+}
+
+.class-info h3 {
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.class-info p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 1rem;
+  min-height: 40px;
+}
+
+.class-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  color: white;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 1rem;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #6B46FF;
+  box-shadow: 0 0 0 2px rgba(107, 70, 255, 0.3);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.class-input {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  margin-bottom: 1rem;
+}
+
+.class-input:focus {
+  border-color: #6B46FF;
+  box-shadow: 0 0 0 2px rgba(107, 70, 255, 0.3);
+}
+
+/* Sidebar Classes Section */
+.classes-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.classes-section h3 {
+  color: white;
+  margin-bottom: 1rem;
+  padding-left: 1rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.class-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.class-item {
+  padding: 0.8rem 1rem;
+  margin: 0.3rem 0.5rem;
+  border-radius: 18px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: all 0.28s ease;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.class-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  transform: translateX(5px);
+}
+
+.class-item.active {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  transform: translateX(5px);
+}
+
+.class-name {
+  flex: 1;
+}
+
+/* Student Actions in Class Dashboard */
+.student-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  gap: 0.5rem;
+}
+
+.give-magic-btn {
+  flex: 1;
+  padding: 0.6rem;
+  background: rgba(107, 70, 255, 0.3);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.28s ease;
+  border: 1px solid rgba(107, 70, 255, 0.4);
+}
+
+.give-magic-btn:hover {
+  background: rgba(107, 70, 255, 0.4);
+}
+
+.delete-student-btn {
+  flex: 1;
+  padding: 0.6rem;
+  background: rgba(255, 107, 107, 0.3);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.28s ease;
+  border: 1px solid rgba(255, 107, 107, 0.4);
+}
+
+.delete-student-btn:hover {
+  background: rgba(255, 107, 107, 0.4);
+}
+
+/* Add Student Form */
+.add-student-form {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+}
+
+.avatar-selector {
+  margin: 1rem 0;
+}
+
+.avatar-selector label {
+  display: block;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.avatar-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.avatar-option {
+  font-size: 1.5rem;
+  padding: 0.3rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.28s ease;
+}
+
+.avatar-option:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.avatar-option.selected {
+  background: #6B46FF;
+  transform: scale(1.1);
+}
