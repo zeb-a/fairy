@@ -30,10 +30,9 @@ export const UserProvider = ({ children }) => {
   // Auto-fetch teacher profile on initial load
   useEffect(() => {
     const fetchTeacherProfile = async () => {
-      // In a real app, we would get the actual user ID from Supabase auth
-      // For now, we'll use a mock ID and fetch the profile
-      const mockUserId = 'user1';
-      const { data: teacherProfile, error } = await supabaseService.db.getTeacherProfile(mockUserId);
+      // Get the current user from Supabase auth
+      const currentUser = supabaseService.auth.getCurrentUser();
+      const { data: teacherProfile, error } = await supabaseService.db.getTeacherProfile(currentUser.id);
       
       if (!error && teacherProfile) {
         setUser(prev => ({

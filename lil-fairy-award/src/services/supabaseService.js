@@ -36,29 +36,41 @@ const supabaseService = {
   // Auth functions
   auth: {
     signIn: async (email, password) => {
-      // Note: In a real application, you would use Supabase's auth
-      // For now, we'll keep it as a mock since we're using anonymous auth
+      // In a real application, you would use Supabase's auth
+      // For now, we'll generate a consistent ID based on email
+      const id = `user_${btoa(email).replace(/[^a-zA-Z0-9]/g, '')}`;
+      const user = { id, email, full_name: 'Teacher Name', avatar_selection: '👩‍🏫' };
+      localStorage.setItem('currentUser', JSON.stringify(user));
       return {
-        user: { id: 'user1', email, full_name: 'Teacher Name', avatar_selection: '👩‍🏫' },
+        user,
         error: null
       };
     },
     
     signUp: async (email, password, fullName) => {
-      // Note: In a real application, you would use Supabase's auth
+      // In a real application, you would use Supabase's auth
+      const id = `user_${btoa(email).replace(/[^a-zA-Z0-9]/g, '')}`;
+      const user = { id, email, full_name: fullName, avatar_selection: '👩‍🏫' };
+      localStorage.setItem('currentUser', JSON.stringify(user));
       return {
-        user: { id: 'user2', email, full_name: fullName, avatar_selection: '👩‍🏫' },
+        user,
         error: null
       };
     },
     
     signOut: async () => {
+      localStorage.removeItem('currentUser');
       return { error: null };
     },
     
     getCurrentUser: () => {
-      // Mock current user - in real app this would use Supabase auth
-      return { id: 'user1', email: 'teacher@example.com', full_name: 'Teacher Name', avatar_selection: '👩‍🏫' };
+      // In a real application, this would use Supabase auth
+      // For now, we'll use a default ID based on localStorage
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        return JSON.parse(storedUser);
+      }
+      return { id: 'user_default', email: 'teacher@example.com', full_name: 'Teacher Name', avatar_selection: '👩‍🏫' };
     }
   },
 
@@ -73,6 +85,25 @@ const supabaseService = {
           .eq('id', userId)
           .single();
         
+        if (error && error.code === 'PGRST116') { // Record not found
+          // Create a new teacher profile
+          const newTeacher = {
+            id: userId,
+            full_name: 'New Teacher',
+            email: 'teacher@example.com',
+            avatar_selection: '🧙',
+            created_at: new Date().toISOString()
+          };
+          
+          const { data: insertData, error: insertError } = await supabase
+            .from('teachers')
+            .insert([newTeacher])
+            .select()
+            .single();
+            
+          return { data: insertData, error: insertError };
+        }
+        
         return { data, error };
       });
       
@@ -81,6 +112,34 @@ const supabaseService = {
     
     updateTeacherProfile: async (userId, profileData) => {
       const result = await handleOperation(async () => {
+        // First try to get the existing teacher
+        const { data: existingTeacher, error: fetchError } = await supabase
+          .from('teachers')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        
+        if (fetchError && fetchError.code === 'PGRST116') {
+          // Teacher doesn't exist, create with provided data
+          const newTeacher = {
+            id: userId,
+            ...profileData,
+            created_at: new Date().toISOString()
+          };
+          
+          const { data, error } = await supabase
+            .from('teachers')
+            .insert([newTeacher])
+            .select()
+            .single();
+            
+          return { data, error };
+        } else if (fetchError) {
+          // Some other error occurred
+          return { data: null, error: fetchError };
+        }
+        
+        // Teacher exists, update the profile
         const { data, error } = await supabase
           .from('teachers')
           .update(profileData)
@@ -301,8 +360,12 @@ const supabaseService = {
   storage: {
     uploadAvatar: async (file, userId) => {
       const result = await handleOperation(async () => {
+        if (!userId) {
+          return { error: new Error('User ID is required for avatar upload') };
+        }
+        
         const fileExt = file.name.split('.').pop();
-        const fileName = `${userId}/${Math.random()}.${fileExt}`;
+        const fileName = `${userId.replace(/[^a-zA-Z0-9]/g, '_')}/${Math.random()}.${fileExt}`;
         const filePath = `avatars/${fileName}`;
         
         const { error: uploadError } = await supabase
@@ -329,8 +392,8 @@ const supabaseService = {
       return result;
     },
     
-    getPublicUrl: (filePath) => {
-      const { data } = supabase
+    getPublicUrl: async (filePath) => {
+      const { data } = await supabase
         .storage
         .from('avatars')
         .getPublicUrl(filePath);

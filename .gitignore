@@ -2,9 +2,10 @@
 # Dependencies
 node_modules/
 
-# Logs and temp files
-*.log
-*.tmp
+# Build artifacts
+dist/
+build/
+*.js
 
 # Environment
 .env
@@ -14,11 +15,6 @@ node_modules/
 # Editors
 .vscode/
 .idea/
-
-# Build artifacts
-dist/
-build/
-*.js.map
 
 # Python
 __pycache__/
@@ -32,23 +28,15 @@ venv/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Coverage
-.coverage
-coverage/
-htmlcov/
-.pytest_cache/
-.mypy_cache/
+# Logs
+*.log
 
-# OS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-
-# Archives
-*.zip
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.gz
-*.rar
-*.7z
 ```
