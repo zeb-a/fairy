@@ -48,17 +48,22 @@ const supabaseService = {
       }
       
       // Create profile if it doesn't exist
-      if (data.user) {
-        await supabaseService.db.createProfileIfNotExists(data.user.id, data.user.email);
+      if (data?.user) {
+        await supabaseService.db.createProfileIfNotExists(data.user.id, data.user.email, null);
       }
       
-      return { user: data.user, error: null };
+      return { user: data?.user, error: null };
     },
     
     signUp: async (email, password, fullName) => {
       const { data, error } = await supabase.auth.signUp({
         email,
-        password
+        password,
+        options: {
+          data: {
+            full_name: fullName
+          }
+        }
       });
       
       if (error) {
@@ -66,11 +71,11 @@ const supabaseService = {
       }
       
       // Create profile for the new user
-      if (data.user) {
+      if (data?.user) {
         await supabaseService.db.createProfileIfNotExists(data.user.id, email, fullName);
       }
       
-      return { user: data.user, error: null };
+      return { user: data?.user, error: null };
     },
     
     signOut: async () => {

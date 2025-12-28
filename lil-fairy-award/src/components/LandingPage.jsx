@@ -26,27 +26,25 @@ const LandingPage = () => {
     setError('');
 
     try {
+      let result;
       if (isLogin) {
         // Login logic
-        const { user, error } = await supabaseService.auth.signIn(formData.email, formData.password);
-        
-        if (error) {
-          throw new Error(error);
-        }
+        result = await supabaseService.auth.signIn(formData.email, formData.password);
       } else {
         // Signup logic
-        const { user, error } = await supabaseService.auth.signUp(formData.email, formData.password, formData.fullName);
-        
-        if (error) {
-          throw new Error(error);
-        }
+        result = await supabaseService.auth.signUp(formData.email, formData.password, formData.fullName);
+      }
+      
+      if (result.error) {
+        setError(result.error);
+        return;
       }
       
       // Close modal after successful auth
       setShowAuthModal(false);
       setFormData({ email: '', password: '', fullName: '' });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || err || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
