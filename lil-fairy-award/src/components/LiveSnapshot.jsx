@@ -1,42 +1,54 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useClassContext } from '../contexts/ClassContext';
+import supabaseService from '../services/supabaseService';
 
 // Create a context for activities to share across the app
 const ActivityContext = React.createContext();
 
 export const ActivityProvider = ({ children }) => {
   const [activities, setActivities] = useState([]);
-  const { students } = useClassContext();
+  const { students, selectedClass } = useClassContext();
+  const [channel, setChannel] = useState(null);
 
-  // Initialize with some activities
+  // Initialize with some activities and set up real-time listener
   useEffect(() => {
-    const initialActivities = [
-      { id: 1, studentName: 'Emma Johnson', action: 'earned \'Participation\' award!', time: '2 min ago', type: 'strength' },
-      { id: 2, studentName: 'Michael Chen', action: 'earned \'Needs Focus\' award!', time: '5 min ago', type: 'need' },
-      { id: 3, studentName: 'Sophia Williams', action: 'earned \'Kindness\' award!', time: '10 min ago', type: 'strength' },
-      { id: 4, studentName: 'James Wilson', action: 'earned \'Focus\' award!', time: '15 min ago', type: 'strength' },
-    ];
-    setActivities(initialActivities);
-  }, []);
+    if (selectedClass?.id) {
+      // Subscribe to real-time updates for points_log
+      const newChannel = supabaseService.realtime.subscribeToPoints((newPoint) => {
+        // Get student name and task title to create activity
+        const student = students.find(s => s.id === newPoint.student_id);
+        const taskTitle = newPoint.tasks?.title || 'Award';
+        const pointType = newPoint.point_type === 'positive' ? 'strength' : 'need';
+        
+        const newActivity = {
+          id: newPoint.id || Date.now(),
+          studentName: student?.name || 'Unknown Student',
+          action: `earned '${taskTitle}' award!`,
+          time: 'Just now',
+          type: pointType,
+          created_at: newPoint.created_at || new Date().toISOString()
+        };
+        
+        setActivities(prev => [newActivity, ...prev.slice(0, 14)]); // Keep only the last 15 activities
+      });
+      
+      setChannel(newChannel);
+    }
 
-  // Add a new activity to the list
-  const addActivity = (studentName, action, type) => {
-    const newActivity = {
-      id: Date.now(),
-      studentName,
-      action: `earned '${action}' award!`,
-      time: 'Just now',
-      type
+    // Cleanup function
+    return () => {
+      if (channel) {
+        supabaseService.realtime.unsubscribe(channel);
+      }
     };
-    setActivities(prev => [newActivity, ...prev.slice(0, 14)]); // Keep only the last 15 activities
-  };
+  }, [selectedClass?.id, students]);
 
   // Update time ago for each activity periodically
   useEffect(() => {
     const interval = setInterval(() => {
       setActivities(prev => 
         prev.map(activity => {
-          const timeDiff = Date.now() - activity.id; // Using id as timestamp for demo
+          const timeDiff = Date.now() - new Date(activity.created_at || activity.id).getTime();
           let timeAgo;
           
           if (timeDiff < 60000) {
@@ -56,6 +68,19 @@ export const ActivityProvider = ({ children }) => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Add a new activity to the list (for local use)
+  const addActivity = (studentName, action, type) => {
+    const newActivity = {
+      id: Date.now(),
+      studentName,
+      action: `earned '${action}' award!`,
+      time: 'Just now',
+      type,
+      created_at: new Date().toISOString()
+    };
+    setActivities(prev => [newActivity, ...prev.slice(0, 14)]); // Keep only the last 15 activities
+  };
 
   const value = {
     activities,

@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useClassContext } from '../contexts/ClassContext';
+import supabaseService from '../services/supabaseService';
+import { resolveAvatarUrl } from '../utils/avatarUtils';
 
 const ClassDashboard = () => {
   const { classes, selectedClass, setSelectedClass, students, addStudent, updateStudentPoints, loading } = useClassContext();
@@ -7,11 +9,28 @@ const ClassDashboard = () => {
   const [newStudentAvatar, setNewStudentAvatar] = useState('👤');
   const [showGiveMagicModal, setShowGiveMagicModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [tasks, setTasks] = useState([]);
 
-  const handleAddStudent = (e) => {
+  // Load tasks for the selected class
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (selectedClass?.id) {
+        const { data, error } = await supabaseService.db.getTasks(selectedClass.id);
+        if (!error) {
+          setTasks(data || []);
+        } else {
+          setTasks([]);
+        }
+      }
+    };
+
+    fetchTasks();
+  }, [selectedClass]);
+
+  const handleAddStudent = async (e) => {
     e.preventDefault();
     if (newStudentName.trim() && selectedClass) {
-      addStudent({
+      await addStudent({
         name: newStudentName.trim(),
         class_id: selectedClass.id,
         strength_points: 0,
@@ -27,16 +46,16 @@ const ClassDashboard = () => {
     setShowGiveMagicModal(true);
   };
 
-  const handleAddStrength = () => {
+  const handleAddStrength = async () => {
     if (selectedStudent) {
-      updateStudentPoints(selectedStudent.id, 'strength', 1);
+      await updateStudentPoints(selectedStudent.id, 'strength', 1);
       setShowGiveMagicModal(false);
     }
   };
 
-  const handleAddNeed = () => {
+  const handleAddNeed = async () => {
     if (selectedStudent) {
-      updateStudentPoints(selectedStudent.id, 'need', 1);
+      await updateStudentPoints(selectedStudent.id, 'need', 1);
       setShowGiveMagicModal(false);
     }
   };
@@ -106,7 +125,7 @@ const ClassDashboard = () => {
                 className="student-card glass"
                 onClick={() => handleGiveMagic(student)}
               >
-                <div className="student-avatar">{student.avatar_url}</div>
+                <div className="student-avatar">{resolveAvatarUrl(student.avatar_url)}</div>
                 <h3>{student.name}</h3>
                 <div className="student-stats">
                   <div className="stat">
@@ -139,8 +158,8 @@ const ClassDashboard = () => {
                     <button 
                       key={award}
                       className="award-btn strength"
-                      onClick={() => {
-                        updateStudentPoints(selectedStudent.id, 'strength', 1);
+                      onClick={async () => {
+                        await updateStudentPoints(selectedStudent.id, 'strength', 1);
                         setShowGiveMagicModal(false);
                       }}
                     >
@@ -158,8 +177,8 @@ const ClassDashboard = () => {
                     <button 
                       key={award}
                       className="award-btn need"
-                      onClick={() => {
-                        updateStudentPoints(selectedStudent.id, 'need', 1);
+                      onClick={async () => {
+                        await updateStudentPoints(selectedStudent.id, 'need', 1);
                         setShowGiveMagicModal(false);
                       }}
                     >

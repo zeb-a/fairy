@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
+import supabaseService from '../services/supabaseService';
+import { resolveAvatarUrl } from '../utils/avatarUtils';
 
 const Settings = () => {
   const { user, updateUser, updateAvatar, updatePassword } = useUser();
@@ -36,7 +38,7 @@ const Settings = () => {
     }, 3000);
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
@@ -45,17 +47,31 @@ const Settings = () => {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        updateAvatar(event.target.result, 'image', event.target.result);
+      setLoading(true);
+      try {
+        // Upload to Supabase storage
+        const uploadResult = await supabaseService.storage.uploadAvatar(file, user.id);
+        
+        if (uploadResult.error) {
+          throw new Error(uploadResult.error.message);
+        }
+        
+        // Get the public URL and update the avatar
+        const publicUrl = uploadResult.data.publicUrl;
+        updateAvatar(publicUrl, 'image', publicUrl);
         setMessage('Avatar updated successfully!');
         setMessageType('success');
+      } catch (error) {
+        console.error('Error uploading avatar:', error);
+        setMessage(`Error uploading avatar: ${error.message}`);
+        setMessageType('error');
+      } finally {
+        setLoading(false);
         setTimeout(() => {
           setMessage('');
           setMessageType('');
         }, 3000);
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -199,7 +215,7 @@ const Settings = () => {
           <h2>Avatar Settings</h2>
           <div className="current-avatar">
             <div className="avatar-preview" style={{ fontSize: '3rem' }}>
-              {user.avatar}
+              {resolveAvatarUrl(user.avatar)}
             </div>
             <p>Current Avatar</p>
           </div>
@@ -235,8 +251,9 @@ const Settings = () => {
                 type="button" 
                 className="upload-btn"
                 onClick={triggerFileInput}
+                disabled={loading}
               >
-                Choose Image
+                {loading ? 'Uploading...' : 'Choose Image'}
               </button>
             </div>
           </div>
