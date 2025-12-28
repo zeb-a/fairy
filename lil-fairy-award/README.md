@@ -1,6 +1,28 @@
-# Lil Fairy Award - Production Build
+# Lil' Fairy Award - Classroom Management System
 
-This is a production-ready classroom management application with Supabase backend integration. Teachers can award points to students, track progress, and manage classes with real-time updates.
+A React-based application for teachers to manage classroom behavior and reward students with a magical theme. This application uses Supabase as its backend for authentication, database, and file storage.
+
+## Prerequisites
+
+Before running this application, you need to:
+
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Configure your database tables and RLS policies (see [SETUP.md](./SETUP.md) for detailed instructions)
+
+## Setup Instructions
+
+### 1. Database Configuration
+
+You must set up your Supabase database with the required tables and policies. Follow the instructions in [SETUP.md](./SETUP.md) to create the necessary tables and Row Level Security policies.
+
+### 2. Environment Configuration
+
+The application is already configured with Supabase credentials in `src/services/supabaseService.js`. Make sure these match your Supabase project:
+
+```javascript
+const supabaseUrl = 'https://jbmpfczuyspgxgqvejuf.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpibXBmY3p1eXNwZ3hncXZlanVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NzI0NjUsImV4cCI6MjA4MjQ0ODQ2NX0.B-pyr_bsUYpU8eHAvBR-HWqj33ocEJw7EfCtFs8Meko';
+```
 
 ## Features Implemented
 
@@ -42,6 +64,19 @@ The application uses the following Supabase tables:
 3. **Award Points**: Click on a student card to award positive or reminder points
 4. **Real-Time Feed**: Watch the Live Snapshot for instant updates across all sessions
 5. **Account Settings**: Update profile information and avatar in the settings
+
+## Troubleshooting
+
+If you're seeing 404 or 400 errors when accessing the dashboard:
+
+- Make sure you've run the database setup SQL commands (see [SETUP.md](./SETUP.md))
+- Verify that your Supabase tables exist with the correct names
+- Ensure Row Level Security policies are properly configured
+- Check that your Supabase project allows your domain for CORS
+
+For avatar upload errors, ensure the storage bucket and policies are properly set up.
+
+See [SETUP.md](./SETUP.md) for detailed troubleshooting steps.
 
 ## Technical Implementation
 
