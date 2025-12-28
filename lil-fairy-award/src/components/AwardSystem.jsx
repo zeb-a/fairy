@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useClassContext } from '../contexts/ClassContext';
 import { useActivityContext } from './LiveSnapshot';
+import { resolveAvatarUrl } from '../utils/avatarUtils';
 
 const AwardSystem = () => {
   const { students, updateStudentPoints, loading } = useClassContext();
@@ -8,8 +9,9 @@ const AwardSystem = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showAwardPanel, setShowAwardPanel] = useState(false);
 
-  const handleAddAward = (student, type, awardName) => {
-    updateStudentPoints(student.id, type, 1);
+  const handleAddAward = async (student, type, awardName) => {
+    // This will now automatically update in the database via the context
+    await updateStudentPoints(student.id, type, 1);
     addActivity(student.name, awardName, type);
     setShowAwardPanel(false);
     setSelectedStudent(null);
@@ -33,7 +35,7 @@ const AwardSystem = () => {
               setShowAwardPanel(true);
             }}
           >
-            <div className="student-avatar">{student.avatar_url}</div>
+            <div className="student-avatar">{resolveAvatarUrl(student.avatar_url)}</div>
             <h3>{student.name}</h3>
             <div className="student-stats">
               <div className="stat">

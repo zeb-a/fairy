@@ -1,11 +1,43 @@
-// Mock Supabase service for Lil Fairy Award
-// In a real application, this would connect to actual Supabase services
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client with the provided credentials
+const supabaseUrl = 'https://jbmpfczuyspgxgqvejuf.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpibXBmY3p1eXNwZ3hncXZlanVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4NzI0NjUsImV4cCI6MjA4MjQ0ODQ2NX0.B-pyr_bsUYpU8eHAvBR-HWqj33ocEJw7EfCtFs8Meko';
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Helper function to handle errors and implement silent retries
+const handleOperation = async (operation, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const result = await operation();
+      if (result.error) {
+        console.warn(`Operation failed, attempt ${i + 1}/${retries}:`, result.error);
+        if (i === retries - 1) {
+          return result; // Return the last error
+        }
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      } else {
+        return result;
+      }
+    } catch (error) {
+      console.warn(`Operation failed with exception, attempt ${i + 1}/${retries}:`, error);
+      if (i === retries - 1) {
+        return { error };
+      }
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+};
 
 const supabaseService = {
   // Auth functions
   auth: {
     signIn: async (email, password) => {
-      // Mock sign in
+      // Note: In a real application, you would use Supabase's auth
+      // For now, we'll keep it as a mock since we're using anonymous auth
       return {
         user: { id: 'user1', email, full_name: 'Teacher Name', avatar_selection: '👩‍🏫' },
         error: null
@@ -13,7 +45,7 @@ const supabaseService = {
     },
     
     signUp: async (email, password, fullName) => {
-      // Mock sign up
+      // Note: In a real application, you would use Supabase's auth
       return {
         user: { id: 'user2', email, full_name: fullName, avatar_selection: '👩‍🏫' },
         error: null
@@ -21,121 +53,316 @@ const supabaseService = {
     },
     
     signOut: async () => {
-      // Mock sign out
       return { error: null };
     },
     
     getCurrentUser: () => {
-      // Mock current user
+      // Mock current user - in real app this would use Supabase auth
       return { id: 'user1', email: 'teacher@example.com', full_name: 'Teacher Name', avatar_selection: '👩‍🏫' };
     }
   },
 
   // Database functions
   db: {
+    // Teachers operations
+    getTeacherProfile: async (userId) => {
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('teachers')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        
+        return { data, error };
+      });
+      
+      return result;
+    },
+    
+    updateTeacherProfile: async (userId, profileData) => {
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('teachers')
+          .update(profileData)
+          .eq('id', userId)
+          .select()
+          .single();
+        
+        return { data, error };
+      });
+      
+      return result;
+    },
+
     // Classes operations
     getClasses: async (userId) => {
-      return {
-        data: [
-          { id: 1, name: 'Class A', description: 'First grade class', teacher_id: userId },
-          { id: 2, name: 'Class B', description: 'Second grade class', teacher_id: userId },
-          { id: 3, name: 'Class C', description: 'Third grade class', teacher_id: userId }
-        ],
-        error: null
-      };
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('classes')
+          .select('*')
+          .eq('teacher_id', userId);
+        
+        return { data, error };
+      });
+      
+      return result;
     },
     
     createClass: async (className, description, teacherId) => {
-      const newClass = {
-        id: Date.now(),
-        name: className,
-        description,
-        teacher_id: teacherId
-      };
-      return { data: newClass, error: null };
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('classes')
+          .insert([{ name: className, description, teacher_id: teacherId }])
+          .select()
+          .single();
+        
+        return { data, error };
+      });
+      
+      return result;
     },
     
     deleteClass: async (classId) => {
-      return { error: null };
+      const result = await handleOperation(async () => {
+        // Delete all students in the class first (cascade delete)
+        await supabase.from('students').delete().eq('class_id', classId);
+        
+        // Then delete the class
+        const { error } = await supabase
+          .from('classes')
+          .delete()
+          .eq('id', classId);
+        
+        return { error };
+      });
+      
+      return result;
     },
 
     // Students operations
     getStudents: async (classId) => {
-      const mockStudents = {
-        1: [
-          { id: 1, name: 'Emma Johnson', class_id: 1, strength_points: 15, need_points: 3, avatar_url: '👩‍🦰' },
-          { id: 2, name: 'Michael Chen', class_id: 1, strength_points: 12, need_points: 5, avatar_url: '👦' },
-          { id: 3, name: 'Sophia Williams', class_id: 1, strength_points: 18, need_points: 2, avatar_url: '👧' },
-          { id: 4, name: 'James Wilson', class_id: 1, strength_points: 8, need_points: 8, avatar_url: '👦' },
-        ],
-        2: [
-          { id: 5, name: 'Olivia Davis', class_id: 2, strength_points: 10, need_points: 4, avatar_url: '👧' },
-          { id: 6, name: 'William Brown', class_id: 2, strength_points: 14, need_points: 6, avatar_url: '👦' },
-        ]
-      };
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('students')
+          .select('*')
+          .eq('class_id', classId);
+        
+        return { data, error };
+      });
       
-      return {
-        data: mockStudents[classId] || [],
-        error: null
-      };
+      return result;
     },
     
     createStudent: async (studentData) => {
-      const newStudent = {
-        ...studentData,
-        id: Date.now()
-      };
-      return { data: newStudent, error: null };
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('students')
+          .insert([studentData])
+          .select()
+          .single();
+        
+        return { data, error };
+      });
+      
+      return result;
     },
     
     updateStudent: async (studentId, updates) => {
-      return { data: { id: studentId, ...updates }, error: null };
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('students')
+          .update(updates)
+          .eq('id', studentId)
+          .select()
+          .single();
+        
+        return { data, error };
+      });
+      
+      return result;
     },
     
     deleteStudent: async (studentId) => {
-      return { error: null };
+      const result = await handleOperation(async () => {
+        const { error } = await supabase
+          .from('students')
+          .delete()
+          .eq('id', studentId);
+        
+        return { error };
+      });
+      
+      return result;
     },
 
     // Tasks operations
     getTasks: async (classId) => {
-      return {
-        data: [
-          { id: 1, title: 'Good participation', point_type: 'positive', class_id: classId },
-          { id: 2, title: 'Helping others', point_type: 'positive', class_id: classId },
-          { id: 3, title: 'Focus improvement', point_type: 'reminder', class_id: classId },
-        ],
-        error: null
-      };
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('class_id', classId);
+        
+        return { data, error };
+      });
+      
+      return result;
     },
     
     createTask: async (taskData) => {
-      const newTask = {
-        ...taskData,
-        id: Date.now()
-      };
-      return { data: newTask, error: null };
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('tasks')
+          .insert([taskData])
+          .select()
+          .single();
+        
+        return { data, error };
+      });
+      
+      return result;
     },
 
     // Point log operations
     getPointLog: async (classId) => {
-      return {
-        data: [
-          { id: 1, student_id: 1, task_id: 1, created_at: new Date().toISOString() },
-          { id: 2, student_id: 2, task_id: 2, created_at: new Date().toISOString() },
-          { id: 3, student_id: 3, task_id: 1, created_at: new Date().toISOString() },
-        ],
-        error: null
-      };
+      const result = await handleOperation(async () => {
+        const { data, error } = await supabase
+          .from('points_log')
+          .select(`
+            *,
+            students(name),
+            tasks(title, point_type)
+          `)
+          .eq('class_id', classId)
+          .order('created_at', { ascending: false })
+          .limit(50); // Limit to last 50 entries
+        
+        return { data, error };
+      });
+      
+      return result;
     },
     
-    addPoint: async (studentId, taskId, pointType) => {
-      const newPoint = {
-        id: Date.now(),
-        student_id: studentId,
-        task_id: taskId,
-        created_at: new Date().toISOString()
-      };
-      return { data: newPoint, error: null };
+    addPoint: async (studentId, taskId, pointType, classId) => {
+      const result = await handleOperation(async () => {
+        // Get the student first to update their points
+        const { data: student, error: studentError } = await supabase
+          .from('students')
+          .select('strength_points, need_points')
+          .eq('id', studentId)
+          .single();
+        
+        if (studentError) {
+          return { error: studentError };
+        }
+        
+        // Determine the field to update based on point type
+        let updateField;
+        if (pointType === 'strength') {
+          updateField = { strength_points: student.strength_points + 1 };
+        } else {
+          updateField = { need_points: student.need_points + 1 };
+        }
+        
+        // Update the student's points
+        const { error: updateError } = await supabase
+          .from('students')
+          .update(updateField)
+          .eq('id', studentId);
+        
+        if (updateError) {
+          return { error: updateError };
+        }
+        
+        // Add to the point log
+        const { data: pointLog, error: logError } = await supabase
+          .from('points_log')
+          .insert([{
+            student_id: studentId,
+            task_id: taskId,
+            class_id: classId,
+            point_type: pointType
+          }])
+          .select()
+          .single();
+        
+        if (logError) {
+          return { error: logError };
+        }
+        
+        return { data: pointLog, error: null };
+      });
+      
+      return result;
+    }
+  },
+  
+  // Storage functions for avatars
+  storage: {
+    uploadAvatar: async (file, userId) => {
+      const result = await handleOperation(async () => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}/${Math.random()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+        
+        const { error: uploadError } = await supabase
+          .storage
+          .from('avatars')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+        
+        if (uploadError) {
+          return { error: uploadError };
+        }
+        
+        // Get public URL
+        const { data } = supabase
+          .storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+        
+        return { data: { path: filePath, publicUrl: data.publicUrl }, error: null };
+      });
+      
+      return result;
+    },
+    
+    getPublicUrl: (filePath) => {
+      const { data } = supabase
+        .storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+      return data.publicUrl;
+    }
+  },
+  
+  // Realtime functions
+  realtime: {
+    subscribeToPoints: (callback) => {
+      const channel = supabase
+        .channel('points-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'points_log',
+          },
+          (payload) => {
+            callback(payload.new);
+          }
+        )
+        .subscribe();
+      
+      return channel;
+    },
+    
+    unsubscribe: (channel) => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     }
   }
 };

@@ -17,20 +17,28 @@ export const ClassProvider = ({ children }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Initialize data from mock service
+  // Auto-fetch classes and students on initial load
   useEffect(() => {
     const initializeData = async () => {
       setLoading(true);
       
-      // Get classes
-      const { data: classesData } = await supabaseService.db.getClasses('user1');
-      setClasses(classesData || []);
+      // Get classes for the teacher
+      const mockUserId = 'user1'; // In a real app, this would come from auth
+      const { data: classesData, error: classesError } = await supabaseService.db.getClasses(mockUserId);
       
-      // Get students for the first class
-      if (classesData && classesData.length > 0) {
-        const { data: studentsData } = await supabaseService.db.getStudents(classesData[0].id);
-        setStudents(studentsData || []);
-        setSelectedClass(classesData[0]);
+      if (!classesError && classesData) {
+        setClasses(classesData);
+        
+        // If there are classes, get students for the first one
+        if (classesData.length > 0) {
+          const firstClass = classesData[0];
+          setSelectedClass(firstClass);
+          
+          const { data: studentsData, error: studentsError } = await supabaseService.db.getStudents(firstClass.id);
+          if (!studentsError) {
+            setStudents(studentsData || []);
+          }
+        }
       }
       
       setLoading(false);
@@ -57,22 +65,24 @@ export const ClassProvider = ({ children }) => {
       return null;
     },
     updateStudentPoints: async (studentId, type, points) => {
+      // Get the student to get their class_id
       const student = students.find(s => s.id === studentId);
       if (!student) return;
       
-      let updates;
-      if (type === 'strength') {
-        updates = { strength_points: student.strength_points + points };
-      } else {
-        updates = { need_points: student.need_points + points };
-      }
+      // Add point to the database which will automatically update the student's points
+      const { data: newPoint, error } = await supabaseService.db.addPoint(
+        studentId, 
+        1, // Using a default task ID, in a real app this would come from context
+        type === 'strength' ? 'positive' : 'reminder', 
+        student.class_id
+      );
       
-      const { data: updatedStudent, error } = await supabaseService.db.updateStudent(studentId, updates);
-      if (!error && updatedStudent) {
-        setStudents(students.map(s => s.id === studentId ? updatedStudent : s));
-        
-        // Add to point log
-        await supabaseService.db.addPoint(studentId, 1, type);
+      if (!error && newPoint) {
+        // Refresh the students list to get updated points from the database
+        const { data: freshStudents, error: fetchError } = await supabaseService.db.getStudents(student.class_id);
+        if (!fetchError) {
+          setStudents(freshStudents);
+        }
       }
     },
     addClass: async (classData) => {
