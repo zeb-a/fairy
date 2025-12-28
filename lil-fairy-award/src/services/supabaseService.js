@@ -36,41 +36,52 @@ const supabaseService = {
   // Auth functions
   auth: {
     signIn: async (email, password) => {
-      // In a real application, you would use Supabase's auth
-      // For now, we'll generate a consistent ID based on email
-      const id = `user_${btoa(email).replace(/[^a-zA-Z0-9]/g, '')}`;
-      const user = { id, email, full_name: 'Teacher Name', avatar_selection: '👩‍🏫' };
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      return {
-        user,
-        error: null
-      };
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        return { user: null, error: error.message };
+      }
+      
+      // Create profile if it doesn't exist
+      if (data.user) {
+        await supabaseService.db.createProfileIfNotExists(data.user.id, data.user.email);
+      }
+      
+      return { user: data.user, error: null };
     },
     
     signUp: async (email, password, fullName) => {
-      // In a real application, you would use Supabase's auth
-      const id = `user_${btoa(email).replace(/[^a-zA-Z0-9]/g, '')}`;
-      const user = { id, email, full_name: fullName, avatar_selection: '👩‍🏫' };
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      return {
-        user,
-        error: null
-      };
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+      
+      if (error) {
+        return { user: null, error: error.message };
+      }
+      
+      // Create profile for the new user
+      if (data.user) {
+        await supabaseService.db.createProfileIfNotExists(data.user.id, email, fullName);
+      }
+      
+      return { user: data.user, error: null };
     },
     
     signOut: async () => {
-      localStorage.removeItem('currentUser');
-      return { error: null };
+      const { error } = await supabase.auth.signOut();
+      return { error: error ? error.message : null };
     },
     
     getCurrentUser: () => {
-      // In a real application, this would use Supabase auth
-      // For now, we'll use a default ID based on localStorage
-      const storedUser = localStorage.getItem('currentUser');
-      if (storedUser) {
-        return JSON.parse(storedUser);
-      }
-      return { id: 'user_default', email: 'teacher@example.com', full_name: 'Teacher Name', avatar_selection: '👩‍🏫' };
+      return supabase.auth.getUser();
+    },
+    
+    onAuthStateChange: (callback) => {
+      return supabase.auth.onAuthStateChange(callback);
     }
   },
 
@@ -85,13 +96,28 @@ const supabaseService = {
           .eq('id', userId)
           .single();
         
-        if (error && error.code === 'PGRST116') { // Record not found
+        return { data, error };
+      });
+      
+      return result;
+    },
+
+    createProfileIfNotExists: async (userId, email, fullName = null) => {
+      const result = await handleOperation(async () => {
+        // First check if the profile already exists
+        const { data: existingProfile, error: fetchError } = await supabase
+          .from('teachers')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        
+        if (fetchError && fetchError.code === 'PGRST116') { // Record not found
           // Create a new teacher profile
           const newTeacher = {
             id: userId,
-            full_name: 'New Teacher',
-            email: 'teacher@example.com',
-            avatar_selection: '🧙',
+            full_name: fullName || email.split('@')[0], // Use fullName if provided, else derive from email
+            email: email,
+            avatar_selection: '🧙', // Default avatar
             created_at: new Date().toISOString()
           };
           
@@ -104,7 +130,8 @@ const supabaseService = {
           return { data: insertData, error: insertError };
         }
         
-        return { data, error };
+        // Profile already exists, return existing data
+        return { data: existingProfile, error: null };
       });
       
       return result;

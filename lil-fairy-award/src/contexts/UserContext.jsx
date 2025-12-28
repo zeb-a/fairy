@@ -12,41 +12,86 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser 
-      ? JSON.parse(savedUser)
-      : {
-          id: null,
-          displayName: 'Teacher Name',
-          email: 'teacher@example.com',
-          avatar: '🧙',
-          avatarType: 'emoji', // 'emoji' or 'image'
-          avatarUrl: null,
-          avatar_selection: '🧙',
-        };
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Auto-fetch teacher profile on initial load
   useEffect(() => {
-    const fetchTeacherProfile = async () => {
-      // Get the current user from Supabase auth
-      const currentUser = supabaseService.auth.getCurrentUser();
-      const { data: teacherProfile, error } = await supabaseService.db.getTeacherProfile(currentUser.id);
+    // Check current auth state
+    const checkAuthState = async () => {
+      const { data: { user: currentUser } } = await supabaseService.auth.getCurrentUser();
       
-      if (!error && teacherProfile) {
-        setUser(prev => ({
-          ...prev,
-          id: teacherProfile.id,
-          displayName: teacherProfile.full_name || prev.displayName,
-          email: teacherProfile.email || prev.email,
-          avatar: teacherProfile.avatar_selection || prev.avatar,
-          avatar_selection: teacherProfile.avatar_selection || prev.avatar_selection
-        }));
+      if (currentUser) {
+        // Fetch teacher profile
+        const { data: teacherProfile, error } = await supabaseService.db.getTeacherProfile(currentUser.id);
+        
+        if (!error && teacherProfile) {
+          setUser({
+            id: teacherProfile.id,
+            displayName: teacherProfile.full_name || currentUser.email.split('@')[0],
+            email: teacherProfile.email || currentUser.email,
+            avatar: teacherProfile.avatar_selection || '🧙',
+            avatarType: 'emoji', // 'emoji' or 'image'
+            avatarUrl: null,
+            avatar_selection: teacherProfile.avatar_selection || '🧙',
+          });
+        } else {
+          // Create a basic user object if profile doesn't exist
+          setUser({
+            id: currentUser.id,
+            displayName: currentUser.email.split('@')[0],
+            email: currentUser.email,
+            avatar: '🧙',
+            avatarType: 'emoji',
+            avatarUrl: null,
+            avatar_selection: '🧙',
+          });
+        }
       }
+      
+      setLoading(false);
     };
 
-    fetchTeacherProfile();
+    checkAuthState();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabaseService.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          // Fetch teacher profile
+          const { data: teacherProfile, error } = await supabaseService.db.getTeacherProfile(session.user.id);
+          
+          if (!error && teacherProfile) {
+            setUser({
+              id: teacherProfile.id,
+              displayName: teacherProfile.full_name || session.user.email.split('@')[0],
+              email: teacherProfile.email || session.user.email,
+              avatar: teacherProfile.avatar_selection || '🧙',
+              avatarType: 'emoji', // 'emoji' or 'image'
+              avatarUrl: null,
+              avatar_selection: teacherProfile.avatar_selection || '🧙',
+            });
+          } else {
+            // Create a basic user object if profile doesn't exist
+            setUser({
+              id: session.user.id,
+              displayName: session.user.email.split('@')[0],
+              email: session.user.email,
+              avatar: '🧙',
+              avatarType: 'emoji',
+              avatarUrl: null,
+              avatar_selection: '🧙',
+            });
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Save user to localStorage whenever it changes
@@ -97,6 +142,7 @@ export const UserProvider = ({ children }) => {
 
   const value = {
     user,
+    loading,
     updateUser,
     updateAvatar,
     updatePassword
