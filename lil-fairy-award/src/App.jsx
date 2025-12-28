@@ -19,11 +19,11 @@ const AppRouter = () => {
   const { user, loading } = useUser();
 
   if (loading) {
-    // Show a loading state while checking auth status
+    // Show the landing page while checking auth status to avoid showing only loading spinner
     return (
-      <div className="app-loading">
-        <div className="loading-spinner">Loading...</div>
-      </div>
+      <>
+        <LandingPage />
+      </>
     );
   }
 
@@ -47,9 +47,7 @@ const AppRouter = () => {
         </>
       ) : (
         // If user is not authenticated, show the landing page
-        <Routes>
-          <Route path="/*" element={<LandingPage />} />
-        </Routes>
+        <LandingPage />
       )}
     </>
   );
