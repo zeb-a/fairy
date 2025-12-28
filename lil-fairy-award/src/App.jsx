@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ClassProvider } from './contexts/ClassContext';
 import { UserProvider } from './contexts/UserContext';
+import { ActivityProvider } from './components/LiveSnapshot';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import ClassDashboard from './components/ClassDashboard';
@@ -15,21 +16,23 @@ function App() {
   return (
     <UserProvider>
       <ClassProvider>
-        <Router>
-          <div className="app">
-            <Sidebar />
-            <main className="main-content">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/dashboard/classes" element={<ClassDashboard />} />
-                <Route path="/dashboard/games" element={<GameCenter />} />
-                <Route path="/dashboard/reports" element={<Analytics />} />
-                <Route path="/award" element={<AwardSystem />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
-            </main>
-          </div>
-        </Router>
+        <ActivityProvider>
+          <Router>
+            <div className="app">
+              <Sidebar />
+              <main className="main-content">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/dashboard/classes" element={<ClassDashboard />} />
+                  <Route path="/dashboard/games" element={<GameCenter />} />
+                  <Route path="/dashboard/reports" element={<Analytics />} />
+                  <Route path="/award" element={<AwardSystem />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Routes>
+              </main>
+            </div>
+          </Router>
+        </ActivityProvider>
       </ClassProvider>
     </UserProvider>
   );
