@@ -19,10 +19,10 @@ function App() {
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/classes" element={<ClassDashboard />} />
+              <Route path="/dashboard/classes" element={<ClassDashboard />} />
+              <Route path="/dashboard/games" element={<GameCenter />} />
+              <Route path="/dashboard/reports" element={<Analytics />} />
               <Route path="/award" element={<AwardSystem />} />
-              <Route path="/games" element={<GameCenter />} />
-              <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>

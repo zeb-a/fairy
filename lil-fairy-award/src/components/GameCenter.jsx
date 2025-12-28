@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useClassContext } from '../contexts/ClassContext';
 
 const GameCenter = () => {
   const [selectedGame, setSelectedGame] = useState(null);
@@ -79,63 +80,245 @@ const GameCenter = () => {
 
 // Magic Wheel Game Component
 const MagicWheelGame = () => {
-  const [names] = useState(['Emma Johnson', 'Michael Chen', 'Sophia Williams', 'James Wilson']);
+  const { students } = useClassContext();
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState('');
+  const [rotation, setRotation] = useState(0);
+  
+  // Get student names from context
+  const studentNames = students.map(student => student.name);
 
   const spinWheel = () => {
+    if (spinning) return;
+    
     setSpinning(true);
     setResult('');
     
-    // Simulate spinning
+    // Calculate random rotation (multiple spins + random segment)
+    const extraSpins = 5; // Number of extra full rotations
+    const segmentAngle = 360 / studentNames.length;
+    const randomSegment = Math.floor(Math.random() * studentNames.length);
+    const targetRotation = rotation + (360 * extraSpins) + (360 - (randomSegment * segmentAngle));
+    
+    setRotation(targetRotation);
+    
+    // Set result after animation completes
     setTimeout(() => {
-      const randomIndex = Math.floor(Math.random() * names.length);
-      setResult(names[randomIndex]);
+      setResult(studentNames[randomSegment]);
       setSpinning(false);
-    }, 3000);
+    }, 5000);
   };
 
   return (
     <div className="magic-wheel-game">
       <h2>The Magic Wheel</h2>
-      <div className={`wheel-container ${spinning ? 'spinning' : ''}`}>
-        <div className="wheel">
-          {names.map((name, index) => (
-            <div 
-              key={index} 
-              className="wheel-segment"
-              style={{ transform: `rotate(${index * (360 / names.length)}deg)` }}
-            >
-              <span>{name}</span>
-            </div>
-          ))}
+      <div className="wheel-container">
+        <svg width="300" height="300" viewBox="0 0 300 300" className="svg-wheel">
+          <g transform={`rotate(${rotation} 150 150)`}>
+            {studentNames.map((name, index) => {
+              const angle = (360 / studentNames.length) * index;
+              const endAngle = (360 / studentNames.length) * (index + 1);
+              
+              // Calculate the path for the segment
+              const startAngleRad = (angle - 90) * (Math.PI / 180);
+              const endAngleRad = (endAngle - 90) * (Math.PI / 180);
+              const x1 = 150 + 140 * Math.cos(startAngleRad);
+              const y1 = 150 + 140 * Math.sin(startAngleRad);
+              const x2 = 150 + 140 * Math.cos(endAngleRad);
+              const y2 = 150 + 140 * Math.sin(endAngleRad);
+              
+              const largeArcFlag = endAngle - angle <= 180 ? "0" : "1";
+              
+              const pathData = [
+                `M 150 150`,
+                `L ${x1} ${y1}`,
+                `A 140 140 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                "Z"
+              ].join(" ");
+              
+              // Calculate text position
+              const textAngle = angle + (endAngle - angle) / 2;
+              const textAngleRad = (textAngle - 90) * (Math.PI / 180);
+              const textX = 150 + 100 * Math.cos(textAngleRad);
+              const textY = 150 + 100 * Math.sin(textAngleRad);
+              
+              // Calculate rotation for text to be readable
+              const textRotation = textAngle > 90 && textAngle < 270 ? textAngle + 180 : textAngle;
+              
+              return (
+                <g key={index}>
+                  <path 
+                    d={pathData} 
+                    fill={`hsl(${(index * 360) / studentNames.length}, 70%, 60%)`} 
+                    stroke="white" 
+                    strokeWidth="2"
+                  />
+                  <text 
+                    x={textX} 
+                    y={textY} 
+                    textAnchor="middle" 
+                    dominantBaseline="middle"
+                    fill="white" 
+                    fontSize="12" 
+                    fontWeight="bold"
+                    transform={`rotate(${textRotation}, ${textX}, ${textY})`}
+                  >
+                    {name}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+          {/* Center circle */}
+          <circle cx="150" cy="150" r="20" fill="#6B46FF" stroke="white" strokeWidth="2" />
+        </svg>
+        <div className="wheel-pointer">
+          <div className="pointer"></div>
         </div>
       </div>
-      <button onClick={spinWheel} disabled={spinning}>
+      <button onClick={spinWheel} disabled={spinning} className="spin-btn">
         {spinning ? 'Spinning...' : 'Spin the Wheel!'}
       </button>
-      {result && <div className="result">Selected: {result}</div>}
+      {result && <div className="result">Selected Magic Helper: {result}</div>}
     </div>
   );
 };
 
 // Memory Match Game Component
 const MemoryMatchGame = () => {
+  const [pairs, setPairs] = useState([]);
+  const [newTerm, setNewTerm] = useState('');
+  const [newDefinition, setNewDefinition] = useState('');
+  const [cards, setCards] = useState([]);
+  const [flippedCards, setFlippedCards] = useState([]);
+  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [gameMode, setGameMode] = useState('teacher'); // 'teacher' or 'student'
+  
+  const addPair = () => {
+    if (newTerm.trim() && newDefinition.trim() && pairs.length < 8) {
+      setPairs([...pairs, { term: newTerm, definition: newDefinition }]);
+      setNewTerm('');
+      setNewDefinition('');
+    }
+  };
+  
+  const removePair = (index) => {
+    setPairs(pairs.filter((_, i) => i !== index));
+  };
+  
+  const startGame = () => {
+    if (pairs.length < 4) {
+      alert('Please add at least 4 pairs to start the game');
+      return;
+    }
+    
+    // Create card pairs (each term and definition appears twice)
+    let gameCards = [];
+    pairs.forEach((pair, index) => {
+      gameCards.push({ id: `${index}-a`, content: pair.term, type: 'term', pairId: index });
+      gameCards.push({ id: `${index}-b`, content: pair.definition, type: 'definition', pairId: index });
+    });
+    
+    // Shuffle cards
+    gameCards = [...gameCards, ...gameCards] // duplicate to create pairs
+      .map(value => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
+    
+    setCards(gameCards);
+    setFlippedCards([]);
+    setMatchedPairs([]);
+    setGameMode('student');
+  };
+  
+  const handleCardClick = (index) => {
+    if (flippedCards.length === 2) return; // Already two cards flipped
+    if (flippedCards.includes(index)) return; // Card already flipped
+    if (matchedPairs.includes(cards[index].pairId)) return; // Card already matched
+    
+    const newFlipped = [...flippedCards, index];
+    setFlippedCards(newFlipped);
+    
+    if (newFlipped.length === 2) {
+      const [firstIndex, secondIndex] = newFlipped;
+      const firstCard = cards[firstIndex];
+      const secondCard = cards[secondIndex];
+      
+      if (firstCard.pairId === secondCard.pairId) {
+        // Match found
+        setTimeout(() => {
+          setMatchedPairs([...matchedPairs, firstCard.pairId]);
+          setFlippedCards([]);
+        }, 1000);
+      } else {
+        // No match, flip back after delay
+        setTimeout(() => {
+          setFlippedCards([]);
+        }, 1000);
+      }
+    }
+  };
+
   return (
     <div className="memory-match-game">
       <h2>Memory Match Creator</h2>
-      <p>Create custom card sets for vocabulary or image matching</p>
-      <div className="game-controls">
-        <input type="text" placeholder="Enter vocabulary term" />
-        <input type="text" placeholder="Enter matching definition" />
-        <button>Add Card Pair</button>
-      </div>
-      <div className="card-grid">
-        <div className="card">Card 1</div>
-        <div className="card">Card 2</div>
-        <div className="card">Card 3</div>
-        <div className="card">Card 4</div>
-      </div>
+      
+      {gameMode === 'teacher' && (
+        <div className="teacher-mode">
+          <h3>Teacher Mode - Create Card Pairs</h3>
+          <div className="game-controls glass">
+            <input 
+              type="text" 
+              placeholder="Enter vocabulary term" 
+              value={newTerm}
+              onChange={(e) => setNewTerm(e.target.value)}
+            />
+            <input 
+              type="text" 
+              placeholder="Enter matching definition" 
+              value={newDefinition}
+              onChange={(e) => setNewDefinition(e.target.value)}
+            />
+            <button onClick={addPair} disabled={pairs.length >= 8}>Add Card Pair</button>
+          </div>
+          
+          <div className="pairs-list">
+            <h4>Current Pairs ({pairs.length}/8)</h4>
+            {pairs.map((pair, index) => (
+              <div key={index} className="pair-item glass">
+                <span className="term">{pair.term}</span> ↔ <span className="definition">{pair.definition}</span>
+                <button onClick={() => removePair(index)} className="remove-btn">Remove</button>
+              </div>
+            ))}
+          </div>
+          
+          <button onClick={startGame} disabled={pairs.length < 4} className="start-game-btn">
+            Start Game ({pairs.length} pairs)
+          </button>
+        </div>
+      )}
+      
+      {gameMode === 'student' && (
+        <div className="student-mode">
+          <h3>Memory Match Game</h3>
+          <button onClick={() => setGameMode('teacher')} className="back-to-teacher">Back to Teacher Mode</button>
+          
+          <div className="card-grid">
+            {cards.map((card, index) => {
+              const isFlipped = flippedCards.includes(index) || matchedPairs.includes(card.pairId);
+              return (
+                <div 
+                  key={index} 
+                  className={`card ${isFlipped ? 'flipped' : ''} ${matchedPairs.includes(card.pairId) ? 'matched' : ''}`}
+                  onClick={() => handleCardClick(index)}
+                >
+                  {isFlipped ? card.content : '?'}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

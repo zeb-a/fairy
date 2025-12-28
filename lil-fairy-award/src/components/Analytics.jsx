@@ -1,137 +1,179 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useClassContext } from '../contexts/ClassContext';
+import DonutChart from './DonutChart';
+import StudentReportCard from './StudentReportCard';
+import { generateMockPointLogs, calculateStrengthVsNeed, getTopStrengths, generateInsights, filterLogsByDateRange } from '../utils/insightsEngine';
 
 const Analytics = () => {
-  const [selectedClass, setSelectedClass] = useState('all');
+  const { students, loading } = useClassContext();
   const [selectedStudent, setSelectedStudent] = useState('all');
+  const [dateRange, setDateRange] = useState('all'); // 'week', 'month', 'all'
+  const [pointLogs, setPointLogs] = useState([]);
+  const [activeView, setActiveView] = useState('overview'); // 'overview', 'student-report'
 
-  // Mock data for charts
-  const strengthVsNeedData = [
-    { type: 'Strengths', value: 75, color: '#6B46FF' },
-    { type: 'Needs', value: 25, color: '#FF6B6B' }
+  // Generate mock point logs when students change
+  useEffect(() => {
+    if (students && students.length > 0) {
+      const logs = generateMockPointLogs(students);
+      setPointLogs(logs);
+    }
+  }, [students]);
+
+  // Filter logs based on date range
+  const filteredLogs = filterLogsByDateRange(pointLogs, dateRange);
+
+  // Calculate overall class metrics
+  const { strengthPercent, needPercent } = calculateStrengthVsNeed(filteredLogs);
+  const topStrengths = getTopStrengths(filteredLogs);
+  const insights = generateInsights(filteredLogs, students);
+
+  // Get selected student object if a specific student is selected
+  const selectedStudentObj = selectedStudent !== 'all' 
+    ? students.find(s => s.id.toString() === selectedStudent) 
+    : null;
+
+  // Chart data for class overview
+  const classChartData = [
+    { name: 'Strengths', value: strengthPercent, color: '#6B46FF' },
+    { name: 'Needs', value: needPercent, color: '#FF6B6B' }
   ];
 
-  const insights = [
-    "Emma Johnson has improved their 'Focus' awards by 20% this week!",
-    "Class A is showing increased participation in class activities.",
-    "Students are responding well to the positive reinforcement system.",
-    "Need-based interventions are showing improvement in target areas."
-  ];
+  if (loading) {
+    return <div className="analytics glass">Loading analytics...</div>;
+  }
 
   return (
     <div className="analytics">
       <h1>Analytics & Insights</h1>
       
-      <div className="filters">
+      {/* Filter Bar */}
+      <div className="filters glass">
         <div className="filter-group">
-          <label>Class:</label>
-          <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
-            <option value="all">All Classes</option>
-            <option value="class-a">Class A</option>
-            <option value="class-b">Class B</option>
-            <option value="class-c">Class C</option>
+          <label>Student:</label>
+          <select 
+            value={selectedStudent} 
+            onChange={(e) => {
+              setSelectedStudent(e.target.value);
+              setActiveView(e.target.value === 'all' ? 'overview' : 'student-report');
+            }}
+          >
+            <option value="all">All Students</option>
+            {students.map(student => (
+              <option key={student.id} value={student.id.toString()}>
+                {student.name}
+              </option>
+            ))}
           </select>
         </div>
         
         <div className="filter-group">
-          <label>Student:</label>
-          <select value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)}>
-            <option value="all">All Students</option>
-            <option value="emma">Emma Johnson</option>
-            <option value="michael">Michael Chen</option>
-            <option value="sophia">Sophia Williams</option>
-            <option value="james">James Wilson</option>
+          <label>Date Range:</label>
+          <select 
+            value={dateRange} 
+            onChange={(e) => setDateRange(e.target.value)}
+          >
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+        
+        <div className="filter-group">
+          <label>View:</label>
+          <select 
+            value={activeView} 
+            onChange={(e) => setActiveView(e.target.value)}
+            disabled={selectedStudent === 'all'}
+          >
+            <option value="overview">Overview</option>
+            <option value="student-report">Student Report</option>
           </select>
         </div>
       </div>
 
-      <div className="analytics-grid">
-        <div className="chart-container">
-          <h2>Strengths vs Needs Distribution</h2>
-          <div className="donut-chart">
-            <svg width="200" height="200" viewBox="0 0 200 200">
-              {strengthVsNeedData.map((segment, index) => {
-                const radius = 80;
-                const circumference = 2 * Math.PI * radius;
-                const startAngle = index === 0 ? -90 : -90 + (strengthVsNeedData[0].value / 100) * 360;
-                const angle = segment.value / 100 * 360;
-                const endAngle = startAngle + angle;
-                
-                const x1 = 100 + radius * Math.cos(startAngle * Math.PI / 180);
-                const y1 = 100 + radius * Math.sin(startAngle * Math.PI / 180);
-                const x2 = 100 + radius * Math.cos(endAngle * Math.PI / 180);
-                const y2 = 100 + radius * Math.sin(endAngle * Math.PI / 180);
-                
-                const largeArcFlag = angle > 180 ? 1 : 0;
-                
-                const pathData = [
-                  `M 100 100`,
-                  `L ${x1} ${y1}`,
-                  `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-                  `L 100 100`
-                ].join(' ');
+      {activeView === 'overview' && (
+        <div className="analytics-grid">
+          {/* Class Overview Chart */}
+          <div className="chart-container glass">
+            <h2>Class Strengths vs Needs Distribution</h2>
+            <DonutChart 
+              data={classChartData} 
+              centerText={{ value: `${strengthPercent}%`, label: 'Strengths' }}
+              size={200}
+            />
+          </div>
+
+          {/* Top Strengths */}
+          <div className="top-strengths glass">
+            <h2>Top Class Strengths</h2>
+            <div className="strengths-list">
+              {topStrengths.length > 0 ? (
+                topStrengths.map((strength, index) => (
+                  <div key={index} className="strength-item">
+                    <span className="strength-rank">#{index + 1}</span>
+                    <span className="strength-name">{strength.taskName}</span>
+                    <span className="strength-count">({strength.count} times)</span>
+                  </div>
+                ))
+              ) : (
+                <p>No strength data available</p>
+              )}
+            </div>
+          </div>
+
+          {/* Smart Insights */}
+          <div className="insights-container glass">
+            <h2>Smart Insights</h2>
+            <div className="insights-list">
+              {insights.map((insight, index) => (
+                <div key={index} className="insight-item">
+                  <span className="insight-icon">💡</span>
+                  <p>{insight}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Student Performance */}
+          <div className="student-performance glass">
+            <h2>Student Performance Overview</h2>
+            <div className="student-performance-grid">
+              {students.map(student => {
+                const { strengthPercent: studentStrength, needPercent: studentNeed } = 
+                  calculateStrengthVsNeed(filteredLogs, student.id);
                 
                 return (
-                  <path
-                    key={index}
-                    d={pathData}
-                    fill={segment.color}
-                    stroke="#fff"
-                    strokeWidth="1"
-                  />
+                  <div key={student.id} className="student-performance-card">
+                    <div className="student-avatar-small">{student.avatar_url}</div>
+                    <div className="student-name">{student.name}</div>
+                    <div className="student-stats">
+                      <div className="stat">
+                        <span className="stat-label">Strengths:</span>
+                        <span className="stat-value purple">{studentStrength}%</span>
+                      </div>
+                      <div className="stat">
+                        <span className="stat-label">Needs:</span>
+                        <span className="stat-value red">{studentNeed}%</span>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
-              <circle cx="100" cy="100" r="40" fill="white" />
-              <text x="100" y="95" textAnchor="middle" fontSize="16" fontWeight="bold">75%</text>
-              <text x="100" y="115" textAnchor="middle" fontSize="12">Strengths</text>
-            </svg>
-          </div>
-          <div className="chart-legend">
-            {strengthVsNeedData.map((item, index) => (
-              <div key={index} className="legend-item">
-                <span 
-                  className="legend-color" 
-                  style={{ backgroundColor: item.color }}
-                ></span>
-                <span>{item.type}: {item.value}%</span>
-              </div>
-            ))}
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="insights-container">
-          <h2>Smart Insights</h2>
-          <div className="insights-list">
-            {insights.map((insight, index) => (
-              <div key={index} className="insight-card">
-                <span className="insight-icon">💡</span>
-                <p>{insight}</p>
-              </div>
-            ))}
-          </div>
+      {activeView === 'student-report' && selectedStudentObj && (
+        <div className="student-report-container">
+          <StudentReportCard 
+            student={selectedStudentObj} 
+            pointLogs={filteredLogs} 
+            students={students}
+            dateRange={dateRange}
+          />
         </div>
-
-        <div className="reports-container">
-          <h2>Reports</h2>
-          <div className="report-actions">
-            <button className="report-btn">
-              <span className="btn-icon">📄</span>
-              Generate PDF Report
-            </button>
-            <button className="report-btn">
-              <span className="btn-icon">📊</span>
-              Export Data
-            </button>
-          </div>
-          <div className="report-preview">
-            <h3>Sample Report Card</h3>
-            <p>Student: Emma Johnson</p>
-            <p>Period: This Week</p>
-            <p>Strengths: 15</p>
-            <p>Needs: 3</p>
-            <p>Improvement Areas: Focus, Participation</p>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -309,32 +309,94 @@ h1 {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Award System Styles */
-.award-controls {
+/* Student Grid Styles */
+.student-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
 }
 
-.award-type-selector {
+.student-card {
   padding: 1.5rem;
   border-radius: 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.28s ease;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
 }
 
-.award-type-buttons {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
+.student-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(31, 38, 135, 0.3);
+  background: rgba(255, 255, 255, 0.25);
 }
 
-.award-type-btn {
-  flex: 1;
-  padding: 1.2rem;
+.student-avatar {
+  font-size: 2.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.student-card h3 {
+  color: white;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.student-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-value {
+  font-weight: bold;
+}
+
+.stat-value.purple {
+  color: #6B46FF;
+}
+
+.stat-value.red {
+  color: #FF6B6B;
+}
+
+/* Award Magic Panel Styles */
+.award-magic-section {
+  margin: 1.5rem 0;
+}
+
+.award-category {
+  margin-bottom: 1.5rem;
+}
+
+.award-category h3 {
+  color: white;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.award-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+}
+
+.award-btn {
+  padding: 1rem 1.5rem;
   border: none;
   border-radius: 18px;
   font-size: 1rem;
@@ -345,23 +407,39 @@ h1 {
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  min-width: 120px;
 }
 
-.award-type-btn.strength {
+.award-btn.strength {
   background: rgba(107, 70, 255, 0.2);
   color: white;
   border: 1px solid rgba(107, 70, 255, 0.3);
 }
 
-.award-type-btn.need {
+.award-btn.strength:hover {
+  background: rgba(107, 70, 255, 0.3);
+  transform: translateY(-3px);
+}
+
+.award-btn.need {
   background: rgba(255, 107, 107, 0.2);
   color: white;
   border: 1px solid rgba(255, 107, 107, 0.3);
 }
 
-.award-type-btn:hover {
+.award-btn.need:hover {
+  background: rgba(255, 107, 107, 0.3);
   transform: translateY(-3px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.live-activity-feed {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
 }
 
 .live-activity {
@@ -517,6 +595,353 @@ h1 {
   background: rgba(255, 255, 255, 0.15);
   color: white;
   outline: none;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.chart-container {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+  text-align: center;
+}
+
+.donut-chart {
+  margin: 1rem auto;
+  display: flex;
+  justify-content: center;
+}
+
+.chart-legend {
+  margin-top: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.legend-color {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+}
+
+.insights-container {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+}
+
+.insights-list {
+  margin-top: 1rem;
+}
+
+.insight-card {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+
+.insight-icon {
+  font-size: 1.2rem;
+}
+
+.insight-card p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.reports-container {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+  grid-column: 1 / -1;
+}
+
+.report-actions {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.report-btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 18px;
+  background: rgba(255, 211, 107, 0.2); /* Gold color */
+  color: white;
+  cursor: pointer;
+  transition: all 0.28s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(255, 211, 107, 0.3);
+}
+
+.report-btn:hover {
+  background: rgba(255, 211, 107, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Magic Wheel Game Styles */
+.magic-wheel-game {
+  padding: 2rem;
+  text-align: center;
+}
+
+.wheel-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 2rem auto;
+}
+
+.svg-wheel {
+  transition: transform 5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}
+
+.wheel-pointer {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.pointer {
+  width: 30px;
+  height: 30px;
+  background: #6B46FF;
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  margin: 0 auto;
+}
+
+.spin-btn {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  background: #6B46FF;
+  color: white;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.28s ease;
+  margin: 1rem 0;
+}
+
+.spin-btn:hover {
+  background: #5a3ad9;
+  transform: translateY(-2px);
+}
+
+.spin-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.result {
+  margin-top: 1.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  display: inline-block;
+}
+
+/* Memory Match Game Styles */
+.memory-match-game {
+  padding: 2rem;
+}
+
+.teacher-mode, .student-mode {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.game-controls {
+  padding: 1.5rem;
+  border-radius: 18px;
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.game-controls input {
+  padding: 0.8rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  outline: none;
+}
+
+.game-controls input:focus {
+  border-color: #6B46FF;
+  box-shadow: 0 0 0 2px rgba(107, 70, 255, 0.3);
+}
+
+.game-controls button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 18px;
+  background: #6B46FF;
+  color: white;
+  cursor: pointer;
+  transition: all 0.28s ease;
+  font-weight: 500;
+  align-self: flex-start;
+}
+
+.game-controls button:hover {
+  background: #5a3ad9;
+  transform: translateY(-2px);
+}
+
+.game-controls button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pairs-list {
+  margin: 1.5rem 0;
+}
+
+.pair-item {
+  padding: 1rem;
+  border-radius: 18px;
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.term, .definition {
+  flex: 1;
+  color: white;
+  text-align: center;
+}
+
+.remove-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 18px;
+  background: #FF6B6B;
+  color: white;
+  cursor: pointer;
+  transition: all 0.28s ease;
+}
+
+.remove-btn:hover {
+  background: #ff5252;
+}
+
+.start-game-btn {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  background: #FFD36B;
+  color: #333;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.28s ease;
+  font-weight: 500;
+  margin: 1rem 0;
+}
+
+.start-game-btn:hover {
+  background: #ffc44d;
+  transform: translateY(-2px);
+}
+
+.start-game-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.back-to-teacher {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 18px;
+  background: #7DD7FF;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.28s ease;
+  font-weight: 500;
+  margin: 1rem 0;
+}
+
+.back-to-teacher:hover {
+  background: #6cc4e6;
+  transform: translateY(-2px);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.card {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(107, 70, 255, 0.2);
+  border: 1px solid rgba(107, 70, 255, 0.3);
+  border-radius: 12px;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.28s ease;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.card:hover {
+  background: rgba(107, 70, 255, 0.3);
+  transform: translateY(-3px);
+}
+
+.card.flipped {
+  background: rgba(125, 215, 255, 0.3);
+  border-color: rgba(125, 215, 255, 0.4);
+}
+
+.card.matched {
+  background: rgba(255, 211, 107, 0.3);
+  border-color: rgba(255, 211, 107, 0.4);
+  cursor: default;
 }
 
 .analytics-grid {
@@ -788,5 +1213,256 @@ button:disabled {
   .filters {
     flex-direction: column;
     gap: 1rem;
+  }
+}
+
+
+/* Donut Chart Styles */
+.donut-chart-container {
+  text-align: center;
+}
+
+.donut-chart-container svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.chart-legend {
+  margin-top: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.legend-color {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+}
+
+/* Student Report Card Styles */
+.student-report-card {
+  padding: 2rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.student-avatar {
+  font-size: 3rem;
+}
+
+.student-details h2 {
+  color: white;
+  margin: 0;
+}
+
+.student-details p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.print-btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 18px;
+  background: rgba(255, 211, 107, 0.2);
+  color: white;
+  cursor: pointer;
+  transition: all 0.28s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(255, 211, 107, 0.3);
+}
+
+.print-btn:hover {
+  background: rgba(255, 211, 107, 0.3);
+  transform: translateY(-2px);
+}
+
+.report-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.chart-section {
+  text-align: center;
+}
+
+.strengths-section, .insights-section {
+  grid-column: span 2;
+}
+
+.strengths-list, .insights-list {
+  margin-top: 1rem;
+}
+
+.strength-item, .insight-item {
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.strength-rank {
+  font-weight: bold;
+  color: #FFD36B;
+}
+
+.strength-name {
+  flex: 1;
+  color: white;
+}
+
+.strength-count {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.insight-icon {
+  font-size: 1.2rem;
+}
+
+.insight-item p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+/* Top Strengths Section */
+.top-strengths {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+}
+
+.strengths-list {
+  margin-top: 1rem;
+}
+
+.strength-item {
+  padding: 0.8rem;
+  margin-bottom: 0.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* Student Performance Section */
+.student-performance {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+  grid-column: 1 / -1;
+}
+
+.student-performance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.student-performance-card {
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.student-avatar-small {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.student-name {
+  color: white;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.student-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.stat-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.stat-value {
+  font-weight: bold;
+}
+
+.stat-value.purple {
+  color: #6B46FF;
+}
+
+.stat-value.red {
+  color: #FF6B6B;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .report-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .strengths-section, .insights-section {
+    grid-column: span 1;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .student-info {
+    width: 100%;
   }
 }
