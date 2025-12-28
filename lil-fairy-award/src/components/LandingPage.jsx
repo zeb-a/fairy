@@ -25,14 +25,31 @@ const LandingPage = () => {
     setLoading(true);
     setError('');
 
+    // Set a timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Authentication timeout. Please try again.')), 10000); // 10 second timeout
+    });
+
     try {
       let result;
       if (isLogin) {
         // Login logic
-        result = await supabaseService.auth.signIn(formData.email, formData.password);
+        console.log('Attempting login with:', formData.email);
+        // Race the authentication call with a timeout
+        result = await Promise.race([
+          supabaseService.auth.signIn(formData.email, formData.password),
+          timeoutPromise
+        ]);
+        console.log('Login result:', result);
       } else {
         // Signup logic
-        result = await supabaseService.auth.signUp(formData.email, formData.password, formData.fullName);
+        console.log('Attempting signup with:', formData.email);
+        // Race the authentication call with a timeout
+        result = await Promise.race([
+          supabaseService.auth.signUp(formData.email, formData.password, formData.fullName),
+          timeoutPromise
+        ]);
+        console.log('Signup result:', result);
       }
       
       if (result.error) {
@@ -40,10 +57,18 @@ const LandingPage = () => {
         return;
       }
       
+      // Check if email confirmation is needed for signup
+      if (!isLogin && result.needsConfirmation) {
+        setError('Please check your email to confirm your account.');
+        setLoading(false);
+        return;
+      }
+      
       // Close modal after successful auth
       setShowAuthModal(false);
       setFormData({ email: '', password: '', fullName: '' });
     } catch (err) {
+      console.error('Authentication error:', err);
       setError(err.message || err || 'An unexpected error occurred');
     } finally {
       setLoading(false);

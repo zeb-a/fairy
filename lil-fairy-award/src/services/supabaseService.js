@@ -47,9 +47,11 @@ const supabaseService = {
         return { user: null, error: error.message };
       }
       
-      // Create profile if it doesn't exist
+      // Create profile if it doesn't exist - do this asynchronously so it doesn't block login
       if (data?.user) {
-        await supabaseService.db.createProfileIfNotExists(data.user.id, data.user.email, null);
+        // Run profile creation in the background without waiting for it
+        supabaseService.db.createProfileIfNotExists(data.user.id, data.user.email, null)
+          .catch(err => console.warn('Profile creation failed:', err));
       }
       
       return { user: data?.user, error: null };
@@ -62,7 +64,8 @@ const supabaseService = {
         options: {
           data: {
             full_name: fullName
-          }
+          },
+          emailRedirectTo: window.location.origin // This helps with email confirmation flow
         }
       });
       
@@ -70,12 +73,22 @@ const supabaseService = {
         return { user: null, error: error.message };
       }
       
-      // Create profile for the new user
+      // For new signups, the user might need to confirm email
+      // If email confirmation is required, data.user will be the user object but they might not be logged in yet
       if (data?.user) {
-        await supabaseService.db.createProfileIfNotExists(data.user.id, email, fullName);
+        // If user is already logged in (email autoconfirm is enabled), create profile
+        if (data.session) {
+          // Run profile creation in the background without waiting for it
+          supabaseService.db.createProfileIfNotExists(data.user.id, email, fullName)
+            .catch(err => console.warn('Profile creation failed:', err));
+          return { user: data.user, error: null };
+        } else {
+          // User needs to confirm email - return the user object but indicate they need to confirm
+          return { user: data.user, error: null, needsConfirmation: true };
+        }
       }
       
-      return { user: data?.user, error: null };
+      return { user: null, error: null };
     },
     
     signOut: async () => {

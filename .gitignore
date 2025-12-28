@@ -1,67 +1,77 @@
 ```
-# Compiled and build artifacts
-*.pyc
-__pycache__/
-*.o
-*.obj
-dist/
-build/
-target/
-*.class
-*.exe
-*.dll
-*.so
-*.a
-*.out
-
 # Dependencies
 node_modules/
-venv/
-.venv/
+
+# Build artifacts
+build/
+dist/
+*.js.map
+
+# Environment
 .env
 .env.local
 .env.*
 
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-*.swo
-
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# System files
+# Logs
+*.log
+
+# OS
 .DS_Store
 Thumbs.db
 
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Python specific
-*.pyc
+# Python
 __pycache__/
-.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/
 .mypy_cache/
+.pytest_cache/
+.hypothesis/
 
-# Node.js specific
-node_modules/
+# Node.js
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+node_modules/
+jspm_packages/
+web_modules/
+*.tsbuildinfo
+typings/
 
 # Build outputs
-dist/
-build/
-*.min.js
-*.min.css
+target/
+!.gitignore
+tmp/
+temp/
+public/dist/
+public/build/
 
-# Environment variables
-.env*
-!.env.example
+# Database
+*.db
+*.db-journal
+
+# Sensitive
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 ```
