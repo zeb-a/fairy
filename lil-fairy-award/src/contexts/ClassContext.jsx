@@ -164,22 +164,29 @@ export const ClassProvider = ({ children }) => {
       }
       return null;
     },
-    updateStudentPoints: async (studentId, type, points) => {
+    updateStudentPoints: async (studentId, type, points, rewardType = 'Award') => {
       // Get the student to get their class_id
       const student = students.find(s => s.id === studentId);
       if (!student) return;
       
+      // Find or create a default task for the reward type
+      // For now, we'll use a default task ID, but in a real implementation you'd have specific tasks
+      const taskId = 1; // This would be dynamically determined based on rewardType
+      
       // Add point to the database which will automatically update the student's points
       const { data: newPoint, error } = await supabaseService.db.addPoint(
         studentId, 
-        1, // Using a default task ID, in a real app this would come from context
-        type === 'strength' ? 'positive' : 'reminder', 
-        student.class_id
+        taskId, 
+        type, // Using 'strength' or 'need' instead of 'positive' or 'reminder'
+        student.class_id,
+        rewardType
       );
       
       if (!error && newPoint) {
         // The realtime subscription will handle updating the student data
+        return newPoint;
       }
+      return null;
     },
     addClass: async (classData) => {
       const currentUser = supabaseService.auth.getCurrentUser();

@@ -15,15 +15,19 @@ export const ActivityProvider = ({ children }) => {
     if (selectedClass?.id) {
       // Subscribe to real-time updates for points_log
       const newChannel = supabaseService.realtime.subscribeToPoints((newPoint) => {
-        // Get student name and task title to create activity
+        // Get student name to create activity
         const student = students.find(s => s.id === newPoint.student_id);
-        const taskTitle = newPoint.tasks?.title || 'Award';
-        const pointType = newPoint.point_type === 'positive' ? 'strength' : 'need';
+        
+        // Map point_type to user-friendly type
+        const pointType = newPoint.point_type === 'strength' ? 'strength' : 'need';
+        
+        // Determine the reward type from the associated task
+        const rewardType = newPoint.tasks?.title || newPoint.reward_type || 'Award';
         
         const newActivity = {
           id: newPoint.id || Date.now(),
           studentName: student?.name || 'Unknown Student',
-          action: `earned '${taskTitle}' award!`,
+          action: `earned '${rewardType}' award!`,
           time: 'Just now',
           type: pointType,
           created_at: newPoint.created_at || new Date().toISOString()

@@ -344,7 +344,7 @@ const supabaseService = {
       return result;
     },
     
-    addPoint: async (studentId, taskId, pointType, classId) => {
+    addPoint: async (studentId, taskId, pointType, classId, rewardType = 'Award') => {
       const result = await handleOperation(async () => {
         // Get the student first to update their points
         const { data: student, error: studentError } = await supabase
@@ -376,14 +376,21 @@ const supabaseService = {
         }
         
         // Add to the point log
+        const pointLogData = {
+          student_id: studentId,
+          task_id: taskId,
+          class_id: classId,
+          point_type: pointType
+        };
+        
+        // Add reward_type if provided (only if the column exists in the table)
+        if (rewardType) {
+          pointLogData.reward_type = rewardType;
+        }
+        
         const { data: pointLog, error: logError } = await supabase
           .from('points_log')
-          .insert([{
-            student_id: studentId,
-            task_id: taskId,
-            class_id: classId,
-            point_type: pointType
-          }])
+          .insert([pointLogData])
           .select()
           .single();
         
