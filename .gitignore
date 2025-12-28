@@ -2,20 +2,33 @@
 # Dependencies
 node_modules/
 
-# Editor/IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# Logs
-*.log
+# Build artifacts
+build/
+dist/
+*.js.map
 
 # Environment
 .env
 .env.local
 *.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+htmlcov/
+*.coverage
 
 # Python
 __pycache__/
@@ -23,29 +36,12 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
-venv/
-.venv/
-.env
+*.so
 
-# Build outputs
-dist/
-build/
-*.min.js
-*.min.css
-coverage/
-htmlcov/
-.nyc_output/
-coverage-final.json
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Testing
-.pytest_cache/
-.mypy_cache/
-.coverage
-coverage.xml
+# Temporary files
+*.tmp
+*.temp
+*.bak
 
 # Compression
 *.zip

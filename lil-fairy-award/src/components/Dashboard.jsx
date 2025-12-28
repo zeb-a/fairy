@@ -1,9 +1,12 @@
 import React from 'react';
+import { useUser } from '../contexts/UserContext';
 
 const Dashboard = () => {
+  const { user } = useUser();
+
   return (
     <div className="dashboard">
-      <h1>Classroom Dashboard</h1>
+      <h1>Welcome, {user.displayName}!</h1>
       <div className="dashboard-grid">
         <div className="dashboard-card">
           <h3>Welcome to Lil Fairy Award!</h3>

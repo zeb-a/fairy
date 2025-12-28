@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 
 const Sidebar = () => {
   const location = useLocation();
+  const { user } = useUser();
 
   const navItems = [
     { path: '/', label: 'Dashboard' },
@@ -15,9 +17,16 @@ const Sidebar = () => {
 
   return (
     <aside className="sidebar">
-      <div className="logo-section">
-        <h2>Lil Fairy Award</h2>
+      <div className="user-profile">
+        <div className="user-avatar" style={{ fontSize: '2rem' }}>
+          {user.avatar}
+        </div>
+        <div className="user-info">
+          <h3>{user.displayName}</h3>
+          <p>{user.email}</p>
+        </div>
       </div>
+      
       <nav className="nav-menu">
         <ul>
           {navItems.map((item) => (
