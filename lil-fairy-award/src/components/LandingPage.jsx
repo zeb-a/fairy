@@ -27,7 +27,7 @@ const LandingPage = () => {
 
     // Set a timeout to prevent hanging
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Authentication timeout. Please try again.')), 10000); // 10 second timeout
+      setTimeout(() => reject(new Error('Authentication timeout. Please try again. Make sure your Supabase project is properly configured with Auth enabled.')), 15000); // 15 second timeout
     });
 
     try {
