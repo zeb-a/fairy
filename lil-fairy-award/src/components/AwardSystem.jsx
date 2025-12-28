@@ -1,37 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useClassContext } from '../contexts/ClassContext';
+import { useActivityContext } from './LiveSnapshot';
 
 const AwardSystem = () => {
   const { students, updateStudentPoints, loading } = useClassContext();
-  const [activities, setActivities] = useState([]);
+  const { activities, addActivity } = useActivityContext();
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showAwardPanel, setShowAwardPanel] = useState(false);
 
-  // Initialize with some activities
-  useEffect(() => {
-    setActivities([
-      { id: 1, studentName: 'Emma Johnson', action: 'received Strength award', time: '2 min ago', type: 'strength' },
-      { id: 2, studentName: 'Michael Chen', action: 'received Need reminder', time: '5 min ago', type: 'need' },
-      { id: 3, studentName: 'Sophia Williams', action: 'received Strength award', time: '10 min ago', type: 'strength' },
-      { id: 4, studentName: 'James Wilson', action: 'received Strength award', time: '15 min ago', type: 'strength' },
-    ]);
-  }, []);
-
-  // Add a new activity to the list
-  const addActivity = (studentName, type) => {
-    const newActivity = {
-      id: Date.now(),
-      studentName,
-      action: `received ${type === 'strength' ? 'Strength' : 'Need'} award`,
-      time: 'Just now',
-      type
-    };
-    setActivities(prev => [newActivity, ...prev.slice(0, 9)]); // Keep only the last 10 activities
-  };
-
   const handleAddAward = (student, type, awardName) => {
     updateStudentPoints(student.id, type, 1);
-    addActivity(`${student.name} earned '${awardName}'!`, type);
+    addActivity(student.name, awardName, type);
     setShowAwardPanel(false);
     setSelectedStudent(null);
   };
