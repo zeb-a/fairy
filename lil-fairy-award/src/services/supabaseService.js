@@ -275,17 +275,23 @@ const supabaseService = {
     
     updateClass: async (classId, updates) => {
       const result = await handleOperation(async () => {
-        // Map the 'name' field to 'class_name' for the database
-        const dbUpdates = { ...updates };
-        if (dbUpdates.name) {
-          dbUpdates.class_name = dbUpdates.name;
-          delete dbUpdates.name;
+        // Filter out undefined or null values from updates to avoid invalid fields
+        const filteredUpdates = {};
+        if (updates.name !== undefined && updates.name !== null) {
+          filteredUpdates.class_name = updates.name.trim();
         }
-        // Note: description field doesn't need mapping since it's the same
+        if (updates.description !== undefined && updates.description !== null) {
+          filteredUpdates.description = updates.description.trim();
+        }
+        
+        // Only proceed if there are actual updates to make
+        if (Object.keys(filteredUpdates).length === 0) {
+          return { data: null, error: { message: 'No valid updates provided' } };
+        }
         
         const { data, error } = await supabase
           .from('classes')
-          .update(dbUpdates)
+          .update(filteredUpdates)
           .eq('id', classId)
           .select()
           .single();
