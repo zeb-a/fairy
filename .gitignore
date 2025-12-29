@@ -7,6 +7,9 @@ node_modules/
 .env.local
 .env.*
 
+# Logs
+*.log
+
 # Editor/IDE
 .vscode/
 .idea/
@@ -14,8 +17,10 @@ node_modules/
 *.swo
 *.tmp
 
-# Logs
-*.log
+# Build artifacts
+dist/
+build/
+target/
 
 # Python
 __pycache__/
@@ -25,25 +30,23 @@ __pycache__/
 .Python
 venv/
 .venv/
-.env
-
-# Build outputs
-dist/
-build/
-*.o
-*.obj
-*.so
-*.a
-*.dll
-*.exe
-*.out
-
-# Coverage
+.env/
+.pytest_cache/
+.mypy_cache/
+.coverage
 coverage/
 htmlcov/
-.coverage
 
-# OS
+# Compiled files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+*.out
+
+# System files
 .DS_Store
 Thumbs.db
 

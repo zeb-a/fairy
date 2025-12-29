@@ -2,6 +2,8 @@
 CREATE TABLE teachers (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
+    full_name VARCHAR(255),
+    avatar_selection VARCHAR(10) DEFAULT '🧙',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -9,6 +11,7 @@ CREATE TABLE classes (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     teacher_id UUID REFERENCES teachers(id),
     class_name VARCHAR(255) NOT NULL,
+    description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -17,14 +20,16 @@ CREATE TABLE students (
     class_id UUID REFERENCES classes(id),
     student_name VARCHAR(255) NOT NULL,
     student_number VARCHAR(50) UNIQUE NOT NULL,
+    strength_points INTEGER DEFAULT 0,
+    need_points INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE tasks (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     class_id UUID REFERENCES classes(id),
-    task_name VARCHAR(255) NOT NULL,
-    points INTEGER DEFAULT 0,
+    title VARCHAR(255) NOT NULL,
+    point_type VARCHAR(50) DEFAULT 'strength',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -32,8 +37,10 @@ CREATE TABLE points_log (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     student_id UUID REFERENCES students(id),
     task_id UUID REFERENCES tasks(id),
-    points INTEGER NOT NULL,
-    awarded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    class_id UUID REFERENCES classes(id),
+    point_type VARCHAR(50) NOT NULL,
+    reward_type VARCHAR(100) DEFAULT 'Award',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     awarded_by UUID REFERENCES teachers(id)
 );
 
