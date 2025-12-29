@@ -38,57 +38,69 @@ const supabaseService = {
   // Auth functions
   auth: {
     signIn: async (email, password) => {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) {
-        return { user: null, error: error.message };
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) {
+          console.error('Supabase auth error:', error);
+          return { user: null, error: error.message };
+        }
+        
+        // Create profile if it doesn't exist - do this asynchronously so it doesn't block login
+        if (data?.user) {
+          // Run profile creation in the background without waiting for it
+          supabaseService.db.createProfileIfNotExists(data.user.id, data.user.email, null)
+            .catch(err => console.warn('Profile creation failed:', err));
+        }
+        
+        return { user: data?.user, error: null };
+      } catch (err) {
+        console.error('Unexpected error during sign in:', err);
+        return { user: null, error: err.message || 'Authentication failed' };
       }
-      
-      // Create profile if it doesn't exist - do this asynchronously so it doesn't block login
-      if (data?.user) {
-        // Run profile creation in the background without waiting for it
-        supabaseService.db.createProfileIfNotExists(data.user.id, data.user.email, null)
-          .catch(err => console.warn('Profile creation failed:', err));
-      }
-      
-      return { user: data?.user, error: null };
     },
     
     signUp: async (email, password, fullName) => {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName
-          },
-          emailRedirectTo: window.location.origin // This helps with email confirmation flow
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName
+            },
+            emailRedirectTo: window.location.origin // This helps with email confirmation flow
+          }
+        });
+        
+        if (error) {
+          console.error('Supabase signup error:', error);
+          return { user: null, error: error.message };
         }
-      });
-      
-      if (error) {
-        return { user: null, error: error.message };
-      }
-      
-      // For new signups, the user might need to confirm email
-      // If email confirmation is required, data.user will be the user object but they might not be logged in yet
-      if (data?.user) {
-        // If user is already logged in (email autoconfirm is enabled), create profile
-        if (data.session) {
-          // Run profile creation in the background without waiting for it
-          supabaseService.db.createProfileIfNotExists(data.user.id, email, fullName)
-            .catch(err => console.warn('Profile creation failed:', err));
-          return { user: data.user, error: null };
-        } else {
-          // User needs to confirm email - return the user object but indicate they need to confirm
-          return { user: data.user, error: null, needsConfirmation: true };
+        
+        // For new signups, the user might need to confirm email
+        // If email confirmation is required, data.user will be the user object but they might not be logged in yet
+        if (data?.user) {
+          // If user is already logged in (email autoconfirm is enabled), create profile
+          if (data.session) {
+            // Run profile creation in the background without waiting for it
+            supabaseService.db.createProfileIfNotExists(data.user.id, email, fullName)
+              .catch(err => console.warn('Profile creation failed:', err));
+            return { user: data.user, error: null };
+          } else {
+            // User needs to confirm email - return the user object but indicate they need to confirm
+            return { user: data.user, error: null, needsConfirmation: true };
+          }
         }
+        
+        return { user: null, error: null };
+      } catch (err) {
+        console.error('Unexpected error during sign up:', err);
+        return { user: null, error: err.message || 'Signup failed' };
       }
-      
-      return { user: null, error: null };
     },
     
     signOut: async () => {
@@ -96,8 +108,13 @@ const supabaseService = {
       return { error: error ? error.message : null };
     },
     
-    getCurrentUser: () => {
-      return supabase.auth.getUser();
+    getCurrentUser: async () => {
+      try {
+        return await supabase.auth.getUser();
+      } catch (error) {
+        console.error('Error getting current user:', error);
+        return { data: { user: null }, error };
+      }
     },
     
     onAuthStateChange: (callback) => {
