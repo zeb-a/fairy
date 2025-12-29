@@ -232,18 +232,23 @@ const supabaseService = {
       const result = await handleOperation(async () => {
         const { data, error } = await supabase
           .from('classes')
-          .select('id, name, description, teacher_id, created_at')
+          .select('id, class_name, description, teacher_id, created_at')
           .eq('teacher_id', userId);
         
-        // Map name to name for consistency with frontend expectations (no change needed)
-        return { data, error };
+        // Map class_name to name for consistency with frontend expectations
+        const mappedData = data?.map(item => ({
+          ...item,
+          name: item.class_name
+        }));
+        
+        return { data: mappedData, error };
       });
       
       return result;
     },
     
     createClass: async (className, description, teacherId) => {
-      const classData = { name: className, teacher_id: teacherId };
+      const classData = { class_name: className, teacher_id: teacherId };
       // Only add description if it's provided
       if (description) {
         classData.description = description;
@@ -267,7 +272,7 @@ const supabaseService = {
         // Filter out undefined or null values from updates to avoid invalid fields
         const filteredUpdates = {};
         if (updates.name !== undefined && updates.name !== null) {
-          filteredUpdates.name = updates.name.trim();
+          filteredUpdates.class_name = updates.name.trim();
         }
         if (updates.description !== undefined && updates.description !== null) {
           filteredUpdates.description = updates.description.trim();
