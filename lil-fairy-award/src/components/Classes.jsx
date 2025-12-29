@@ -13,10 +13,10 @@ const Classes = () => {
 
   const handleAddClass = async (e) => {
     e.preventDefault();
-    if (newClassName.trim()) {
+    if (newClassName?.trim()) {
       const newClass = await contextAddClass({
         name: newClassName.trim(),
-        description: newClassDescription.trim()
+        description: newClassDescription?.trim() || ''
       });
       if (newClass) {
         setNewClassName('');
@@ -28,10 +28,10 @@ const Classes = () => {
 
   const handleEditClass = async (e) => {
     e.preventDefault();
-    if (editingClass && editName.trim()) {
+    if (editingClass && editName?.trim()) {
       const updatedClass = await updateClass(editingClass.id, {
         name: editName.trim(),
-        description: editDescription.trim()
+        description: editDescription?.trim() || ''
       });
       
       if (updatedClass) {
@@ -53,8 +53,8 @@ const Classes = () => {
 
   const startEditClass = (cls) => {
     setEditingClass(cls);
-    setEditName(cls.name);
-    setEditDescription(cls.description);
+    setEditName(cls.name || '');
+    setEditDescription(cls.description || '');
   };
 
   const cancelEdit = () => {
