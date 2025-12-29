@@ -18,13 +18,18 @@ export const ClassProvider = ({ children }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  const { user: currentUser } = useUser(); // Get user from UserContext
+  
   // Auto-fetch classes and students on initial load
   useEffect(() => {
     const initializeData = async () => {
       setLoading(true);
       
-      // Get the current user
-      const currentUser = supabaseService.auth.getCurrentUser();
+      if (!currentUser) {
+        console.error('No current user found when initializing classes');
+        setLoading(false);
+        return;
+      }
       
       // Get classes for the teacher
       const { data: classesData, error: classesError } = await supabaseService.db.getClasses(currentUser.id);
@@ -48,7 +53,7 @@ export const ClassProvider = ({ children }) => {
     };
     
     initializeData();
-  }, []);
+  }, [currentUser]);
 
   // Set up Realtime subscriptions
   useEffect(() => {
@@ -57,7 +62,10 @@ export const ClassProvider = ({ children }) => {
     let classesChannel;
 
     const setupRealtimeSubscriptions = async () => {
-      const currentUser = supabaseService.auth.getCurrentUser();
+      if (!currentUser) {
+        console.error('No current user found when setting up realtime subscriptions');
+        return;
+      }
       
       // Subscribe to points changes
       pointsChannel = supabaseService.realtime.subscribeToPoints((payload) => {
@@ -144,7 +152,7 @@ export const ClassProvider = ({ children }) => {
         supabaseService.client.removeChannel(classesChannel);
       }
     };
-  }, [selectedClass]);
+  }, [selectedClass, currentUser]);
 
   const value = {
     selectedClass,
@@ -189,7 +197,10 @@ export const ClassProvider = ({ children }) => {
       return null;
     },
     addClass: async (classData) => {
-      const currentUser = supabaseService.auth.getCurrentUser();
+      if (!currentUser) {
+        console.error('No current user found when creating class');
+        return null;
+      }
       const { data: newClass, error } = await supabaseService.db.createClass(
         classData.name, 
         classData.description, 

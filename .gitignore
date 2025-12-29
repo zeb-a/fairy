@@ -1,45 +1,66 @@
 ```
 # Dependencies
 node_modules/
-
-# Build artifacts
+.pnpm-store/
+.yarn/
+.yarn-cache/
+.npm/
+.nuxt/
+.next/
+.vercel/
 dist/
 build/
-*.js.map
+target/
+out/
+_output/
+_deps/
+__pycache__/
+*.egg-info/
+.cargo/
+.go/
+zig-cache/
+zig-out/
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
 
 # Environment
 .env
 .env.local
 .env.*
+!.env.example
+!.env.sample
 
 # Editors
 .vscode/
 .idea/
-
-# Logs
-*.log
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Temp files
-*.tmp
+*.sublime-project
+*.sublime-workspace
+*.atom/
+*.vim/
 *.swp
 *.swo
 
-# OS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Icon?
+```
 
-# Coverage
-coverage/
-htmlcov/
-.coverage
+Wait, let me reconsider this. The only modified file is a JSX source file, which doesn't indicate any build artifacts or dependencies in the change list. Following rule #6, since this appears to be only source/config files without build artifacts, dependencies, or temp files:
 
-# Testing
-.mypy_cache/
-.pytest_cache/
+```
+
 ```
