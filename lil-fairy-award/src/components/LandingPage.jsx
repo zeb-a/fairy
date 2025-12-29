@@ -25,9 +25,9 @@ const LandingPage = () => {
     setLoading(true);
     setError('');
 
-    // Set a timeout to prevent hanging
+    // Set a timeout to prevent hanging - increased to 30 seconds to allow for slower network responses
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Authentication timeout. Please try again. Make sure your Supabase project is properly configured with Auth enabled.')), 15000); // 15 second timeout
+      setTimeout(() => reject(new Error('Authentication timeout. Please try again. Make sure your Supabase project is properly configured with Auth enabled.')), 30000); // 30 second timeout
     });
 
     try {
@@ -35,6 +35,7 @@ const LandingPage = () => {
       if (isLogin) {
         // Login logic
         console.log('Attempting login with:', formData.email);
+        console.log('Supabase client available:', !!supabaseService.client);
         // Race the authentication call with a timeout
         result = await Promise.race([
           supabaseService.auth.signIn(formData.email, formData.password),
