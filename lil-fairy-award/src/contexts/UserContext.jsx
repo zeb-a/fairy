@@ -16,39 +16,78 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check current auth state
+    // Check current auth state with timeout to prevent hanging
     const checkAuthState = async () => {
-      const { data: { user: currentUser } } = await supabaseService.auth.getCurrentUser();
-      
-      if (currentUser) {
-        // Fetch teacher profile
-        const { data: teacherProfile, error } = await supabaseService.db.getTeacherProfile(currentUser.id);
+      try {
+        // Create a timeout promise to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Auth state check timeout')), 15000); // 15 second timeout
+        });
+
+        // Race the auth check with timeout
+        const authCheckPromise = supabaseService.auth.getCurrentUser();
         
-        if (!error && teacherProfile) {
-          setUser({
-            id: teacherProfile.id,
-            displayName: teacherProfile.full_name || currentUser.email.split('@')[0],
-            email: teacherProfile.email || currentUser.email,
-            avatar: teacherProfile.avatar_selection || '🧙',
-            avatarType: 'emoji', // 'emoji' or 'image'
-            avatarUrl: null,
-            avatar_selection: teacherProfile.avatar_selection || '🧙',
-          });
-        } else {
-          // Create a basic user object if profile doesn't exist
-          setUser({
-            id: currentUser.id,
-            displayName: currentUser.email.split('@')[0],
-            email: currentUser.email,
-            avatar: '🧙',
-            avatarType: 'emoji',
-            avatarUrl: null,
-            avatar_selection: '🧙',
-          });
+        const result = await Promise.race([authCheckPromise, timeoutPromise]);
+        
+        const { data: { user: currentUser }, error: userError } = result;
+        
+        if (userError) {
+          console.error('Error getting current user:', userError);
+          setLoading(false);
+          return;
         }
+        
+        if (currentUser) {
+          try {
+            // Fetch teacher profile with timeout
+            const profileTimeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('Profile fetch timeout')), 10000); // 10 second timeout
+            });
+
+            const profilePromise = supabaseService.db.getTeacherProfile(currentUser.id);
+            const profileResult = await Promise.race([profilePromise, profileTimeoutPromise]);
+            
+            if (!profileResult.error && profileResult.data) {
+              setUser({
+                id: profileResult.data.id,
+                displayName: profileResult.data.full_name || currentUser.email.split('@')[0],
+                email: profileResult.data.email || currentUser.email,
+                avatar: profileResult.data.avatar_selection || '🧙',
+                avatarType: 'emoji', // 'emoji' or 'image'
+                avatarUrl: null,
+                avatar_selection: profileResult.data.avatar_selection || '🧙',
+              });
+            } else {
+              // Create a basic user object if profile doesn't exist
+              setUser({
+                id: currentUser.id,
+                displayName: currentUser.email.split('@')[0],
+                email: currentUser.email,
+                avatar: '🧙',
+                avatarType: 'emoji',
+                avatarUrl: null,
+                avatar_selection: '🧙',
+              });
+            }
+          } catch (profileError) {
+            console.error('Error fetching teacher profile:', profileError);
+            // Still set basic user info if profile fetch fails
+            setUser({
+              id: currentUser.id,
+              displayName: currentUser.email.split('@')[0],
+              email: currentUser.email,
+              avatar: '🧙',
+              avatarType: 'emoji',
+              avatarUrl: null,
+              avatar_selection: '🧙',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error in auth state check:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     checkAuthState();
@@ -57,21 +96,40 @@ export const UserProvider = ({ children }) => {
     const { data: { subscription } } = supabaseService.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Fetch teacher profile
-          const { data: teacherProfile, error } = await supabaseService.db.getTeacherProfile(session.user.id);
-          
-          if (!error && teacherProfile) {
-            setUser({
-              id: teacherProfile.id,
-              displayName: teacherProfile.full_name || session.user.email.split('@')[0],
-              email: teacherProfile.email || session.user.email,
-              avatar: teacherProfile.avatar_selection || '🧙',
-              avatarType: 'emoji', // 'emoji' or 'image'
-              avatarUrl: null,
-              avatar_selection: teacherProfile.avatar_selection || '🧙',
+          try {
+            // Fetch teacher profile with timeout
+            const profileTimeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('Profile fetch timeout')), 10000); // 10 second timeout
             });
-          } else {
-            // Create a basic user object if profile doesn't exist
+
+            const profilePromise = supabaseService.db.getTeacherProfile(session.user.id);
+            const profileResult = await Promise.race([profilePromise, profileTimeoutPromise]);
+            
+            if (!profileResult.error && profileResult.data) {
+              setUser({
+                id: profileResult.data.id,
+                displayName: profileResult.data.full_name || session.user.email.split('@')[0],
+                email: profileResult.data.email || session.user.email,
+                avatar: profileResult.data.avatar_selection || '🧙',
+                avatarType: 'emoji', // 'emoji' or 'image'
+                avatarUrl: null,
+                avatar_selection: profileResult.data.avatar_selection || '🧙',
+              });
+            } else {
+              // Create a basic user object if profile doesn't exist
+              setUser({
+                id: session.user.id,
+                displayName: session.user.email.split('@')[0],
+                email: session.user.email,
+                avatar: '🧙',
+                avatarType: 'emoji',
+                avatarUrl: null,
+                avatar_selection: '🧙',
+              });
+            }
+          } catch (profileError) {
+            console.error('Error fetching teacher profile after sign in:', profileError);
+            // Still set basic user info if profile fetch fails
             setUser({
               id: session.user.id,
               displayName: session.user.email.split('@')[0],

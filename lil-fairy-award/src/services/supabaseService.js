@@ -6,11 +6,21 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Helper function to handle errors and implement silent retries
-const handleOperation = async (operation, retries = 3) => {
+// Helper function to handle errors and implement silent retries with timeout
+const handleOperation = async (operation, retries = 3, timeoutMs = 10000) => {
   for (let i = 0; i < retries; i++) {
     try {
-      const result = await operation();
+      // Create a timeout promise to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Operation timeout after ${timeoutMs}ms`)), timeoutMs);
+      });
+
+      // Race the operation with timeout
+      const result = await Promise.race([
+        operation(),
+        timeoutPromise
+      ]);
+
       if (result.error) {
         console.warn(`Operation failed, attempt ${i + 1}/${retries}:`, result.error);
         if (i === retries - 1) {
@@ -134,7 +144,7 @@ const supabaseService = {
           .single();
         
         return { data, error };
-      });
+      }, 3, 15000); // 3 retries, 15 second timeout
       
       return result;
     },
@@ -169,7 +179,7 @@ const supabaseService = {
         
         // Profile already exists, return existing data
         return { data: existingProfile, error: null };
-      });
+      }, 3, 15000); // 3 retries, 15 second timeout
       
       return result;
     },
