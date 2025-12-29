@@ -232,8 +232,20 @@ const supabaseService = {
       const result = await handleOperation(async () => {
         const { data, error } = await supabase
           .from('classes')
-          .select('*')
+          .select('id, class_name, description, teacher_id, created_at')
           .eq('teacher_id', userId);
+        
+        // Map class_name to name for consistency with frontend expectations
+        if (data) {
+          const mappedData = data.map(cls => ({
+            id: cls.id,
+            name: cls.class_name,
+            description: cls.description,
+            teacher_id: cls.teacher_id,
+            created_at: cls.created_at
+          }));
+          return { data: mappedData, error };
+        }
         
         return { data, error };
       });
@@ -242,10 +254,16 @@ const supabaseService = {
     },
     
     createClass: async (className, description, teacherId) => {
+      const classData = { class_name: className, teacher_id: teacherId };
+      // Only add description if it's provided
+      if (description) {
+        classData.description = description;
+      }
+      
       const result = await handleOperation(async () => {
         const { data, error } = await supabase
           .from('classes')
-          .insert([{ name: className, description, teacher_id: teacherId }])
+          .insert([classData])
           .select()
           .single();
         
@@ -257,9 +275,17 @@ const supabaseService = {
     
     updateClass: async (classId, updates) => {
       const result = await handleOperation(async () => {
+        // Map the 'name' field to 'class_name' for the database
+        const dbUpdates = { ...updates };
+        if (dbUpdates.name) {
+          dbUpdates.class_name = dbUpdates.name;
+          delete dbUpdates.name;
+        }
+        // Note: description field doesn't need mapping since it's the same
+        
         const { data, error } = await supabase
           .from('classes')
-          .update(updates)
+          .update(dbUpdates)
           .eq('id', classId)
           .select()
           .single();
