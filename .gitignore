@@ -5,12 +5,12 @@ node_modules/
 # Build artifacts
 dist/
 build/
-*.js
+*.js.map
 
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
 # Editors
 .vscode/
@@ -25,20 +25,21 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Temporary files
+# Temp files
 *.tmp
 *.swp
-*~
+*.swo
 
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
 
-# Coverage reports
+# Coverage
 coverage/
 htmlcov/
 .coverage
 
-# Local configuration
-.env.local
+# Testing
+.mypy_cache/
+.pytest_cache/
 ```
